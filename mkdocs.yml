@@ -37,6 +37,9 @@ theme:
     - search.suggest
     - search.highlight
     - search.share
+    - navigation.tracking
+    - navigation.sections
+    - navigation.path
 
 
 plugins:
@@ -50,5 +53,6 @@ extra_css:
 - stylesheets/extra.css
 
 nav:
-- Home: index.md
-- About: about.md
+  - Home: index.md
+  - 'Getting started':
+    - About: about.md
