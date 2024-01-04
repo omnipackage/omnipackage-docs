@@ -10,10 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          persist-credentials: false
-          fetch-depth: 0
+        uses: actions/checkout@v4
 
       - name: Setup python
         uses: actions/setup-python@v4
@@ -25,22 +22,17 @@ jobs:
         run: mkdocs build
 
       - name: Deploy docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mv ./site /tmp/build
-          git checkout gh-pages
-          mv /tmp/build/* .
-          git add . --all
-
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.${GITHUB_DOMAIN:-"github.com"}"
 
-          git commit -m "updated"
+          git remote rm origin
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@${GITHUB_DOMAIN:-"github.com"}/${GITHUB_REPOSITORY}.git"
 
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: gh-pages
+          mkdocs gh-pages
+
 
 
