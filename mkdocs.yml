@@ -1,4 +1,4 @@
-site_name: OmniPackage Docs
+site_name: OmniPackage documentation
 site_url: "https://docs.omnipackage.org"
 repo_url: "https://github.com/omnipackage/omnipackage-docs"
 site_description: "Documentation for Omnipackage - Linux packaging made easy"
@@ -6,6 +6,8 @@ site_author: "Oleg Antonyan"
 #copyright: "Oleg Antonian PE"
 theme:
   name: material
+  favicon: img/favicon.ico
+  logo: img/logo_white.png
   palette:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
@@ -19,6 +21,8 @@ theme:
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
+      primary: custom
+      accent: custom
 
     # Palette toggle for dark mode
     - media: "(prefers-color-scheme: dark)"
@@ -26,6 +30,8 @@ theme:
       toggle:
         icon: material/brightness-4
         name: Switch to system preference
+      primary: custom
+      accent: custom
 
   features:
     - search.suggest
@@ -38,6 +44,9 @@ plugins:
 - search
 - privacy
 
+
+extra_css:
+- stylesheets/extra.css
 
 nav:
 - Home: index.md
