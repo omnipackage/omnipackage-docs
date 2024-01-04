@@ -1,10 +1,43 @@
-site_name: Omnipackage Docs
+site_name: OmniPackage Docs
 site_url: "https://docs.omnipackage.org"
 repo_url: "https://github.com/omnipackage/omnipackage-docs"
 site_description: "Documentation for Omnipackage - Linux packaging made easy"
 site_author: "Oleg Antonyan"
-theme: readthedocs
 #copyright: "Oleg Antonian PE"
+theme:
+  name: material
+  palette:
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default # (1)!
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    - search.suggest
+    - search.highlight
+    - search.share
+
+
+plugins:
+- social
+- search
+- privacy
+
 
 nav:
 - Home: index.md
