@@ -18,16 +18,26 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Build docs
+        run: mkdocs build
+
       - name: Deploy docs
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          mv ./site /tmp/build
+          git checkout gh-pages
+          mv /tmp/build/* .
+          git add . --all
+
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.${GITHUB_DOMAIN:-"github.com"}"
 
+          git commit -m "updated"
 
-          git remote set-url --push origin https://${GITHUB_ACTOR}:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: gh-pages
 
 
-          mkdocs gh-deploy
