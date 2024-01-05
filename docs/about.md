@@ -14,18 +14,35 @@ terrae linigera, inane nullo. Extulit fallere, Te
 [ille](http://moenia.io/animam), parte manus; non illa periit aut. Arcitenens
 exit!
 
-    pdaItunesEps(ibm(ivr_cd_device(keystroke_archie_crop, -5), binary_engine *
-            1, 2), northbridgeMaster, ppm);
-    if (controlPcmcia) {
-        alu += header.commerce_android_model(memory_file + apacheBloatware,
-                compressionHdtvBarebones);
-    }
-    abendMtu.veronica_utf.reality(5, wiDuplexGraphic(topology(324978,
-            tunneling_dvd, rte_dpi_encryption)), hard_tiger);
+``` py
+import tensorflow as tf
+```
+
+```c
+pdaItunesEps(ibm(ivr_cd_device(keystroke_archie_crop, -5), binary_engine *
+        1, 2), northbridgeMaster, ppm);
+if (controlPcmcia) {
+    alu += header.commerce_android_model(memory_file + apacheBloatware,
+            compressionHdtvBarebones);
+}
+abendMtu.veronica_utf.reality(5, wiDuplexGraphic(topology(324978,
+        tunneling_dvd, rte_dpi_encryption)), hard_tiger);
+```
 
 ## Quaerunt invadere
 
-Tinnulaque meritos docti de Chromin: numquam
+!!! note
+
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla et euismod
+    nulla. Curabitur feugiat, tortor non consequat finibus, justo purus auctor
+    massa, nec semper lorem quam in massa.
+
+Tinnulaque meritos docti de Chromin: numquam[^1]
+[^1]: Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+[^2]:
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla et euismod
+    nulla. Curabitur feugiat, tortor non consequat finibus, justo purus auctor
+    massa, nec semper lorem quam in massa.
 [vindicat](http://www.mihi-premunt.io/nec.aspx) armis silicem. Cervice parte
 quamvis cumulo **de** causae cum intellegat *hostem*, si nemus et vox arte passa
 tuebere. Hausitque ut duplici lacertos semper.

@@ -4,6 +4,16 @@ repo_url: "https://github.com/omnipackage/omnipackage-docs"
 site_description: "Documentation for Omnipackage - Linux packaging made easy"
 site_author: "Oleg Antonyan"
 #copyright: "Oleg Antonian PE"
+
+nav:
+  - Home: index.md
+  - 'Getting started':
+    - About: about.md
+
+
+
+
+
 theme:
   name: material
   favicon: img/favicon.ico
@@ -35,12 +45,13 @@ theme:
       accent: custom
 
   features:
+    - content.code.copy
+    - content.code.annotate
     - search.suggest
     - search.highlight
     - search.share
     - navigation.tracking
     - navigation.sections
-    - navigation.path
 
 
 plugins:
@@ -53,7 +64,21 @@ plugins:
 extra_css:
 - stylesheets/extra.css
 
-nav:
-  - Home: index.md
-  - 'Getting started':
-    - About: about.md
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - footnotes
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      use_pygments: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.details
