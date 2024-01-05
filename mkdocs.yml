@@ -30,7 +30,7 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default # (1)!
       toggle:
-        icon: material/brightness-7
+        icon: material/weather-sunny
         name: Switch to dark mode
       primary: white
       accent: custom
@@ -39,7 +39,7 @@ theme:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       toggle:
-        icon: material/brightness-4
+        icon: material/weather-night
         name: Switch to system preference
       primary: black
       accent: custom
