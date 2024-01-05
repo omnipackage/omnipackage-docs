@@ -23,14 +23,14 @@ theme:
     # Palette toggle for automatic mode
     - media: "(prefers-color-scheme)"
       toggle:
-        icon: material/weather-sunny
+        icon: material/brightness-auto
         name: Switch to light mode
 
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"
       scheme: default # (1)!
       toggle:
-        icon: material/weather-night
+        icon: material/brightness-7
         name: Switch to dark mode
       primary: white
       accent: custom
@@ -39,7 +39,7 @@ theme:
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       toggle:
-        icon: material/brightness-auto
+        icon: material/brightness-4
         name: Switch to system preference
       primary: black
       accent: custom
