@@ -1,0 +1,2 @@
+[![Publish docs via GitHub Pages](https://github.com/omnipackage/omnipackage-docs/actions/workflows/release-gh-pages.yml/badge.svg)](https://github.com/omnipackage/omnipackage-docs/actions/workflows/release-gh-pages.yml)
+[![pages-build-deployment](https://github.com/omnipackage/omnipackage-docs/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/omnipackage/omnipackage-docs/actions/workflows/pages/pages-build-deployment)
