@@ -1,14 +1,14 @@
 site_name: OmniPackage documentation
 site_url: "https://docs.omnipackage.org"
 repo_url: "https://github.com/omnipackage/omnipackage-docs"
-site_description: "Documentation for Omnipackage - Linux packaging made easy"
+site_description: "Documentation for OmniPackage - Linux packaging made easy"
 site_author: "Oleg Antonyan"
 #copyright: "Oleg Antonian PE"
 
 nav:
   - Home: index.md
-  - 'Getting started':
-    - About: about.md
+  - 'Getting started': getting_started.md
+  - About: about.md
 
 
 
