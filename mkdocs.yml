@@ -11,7 +11,12 @@ nav:
   - 'Self-hosting': self_hosting.md
   - About: about.md
 
-
+extra:
+  web_github_url: https://github.com/omnipackage/omnipackage-web
+  agent_github_url: https://github.com/omnipackage/omnipackage-agent-ruby
+  web_hosted_url: https://web.omnipackage.org
+  examples_github_url: https://github.com/omnipackage/examples
+  agent_public_install_url: https://web.omnipackage.org/oleg/omnipackage-agent
 
 
 
@@ -60,6 +65,7 @@ plugins:
 - search
 - privacy
 - git-revision-date-localized
+- macros
 
 
 extra_css:

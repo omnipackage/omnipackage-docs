@@ -4,8 +4,8 @@
 
 Agent is responsible for building packages. You'll need it to build packages locally. There are multiple ways to install it:
 
-1. OmniPackage repositories [web.omnipackage.org/oleg/omnipackage-agent](https://web.omnipackage.org/oleg/omnipackage-agent)
-2. [Source code](https://github.com/omnipackage/omnipackage-agent-ruby). Reasonably recent version of Ruby required. Executables located in `exe/` directory
+1. OmniPackage repositories [{{agent_public_install_url | replace("http://", "")|replace("https://", "") }}]({{ agent_public_install_url }})
+2. [Source code]({{ agent_github_url }}). Reasonably recent version of Ruby required. Executables located in `exe/` directory
 
 Test your installation
 ```shell
@@ -16,7 +16,7 @@ Agent requires `podman` or `docker` as well as few other common Linux programs. 
 
 ## Building example project
 
-1. Clone [examples](https://github.com/omnipackage/examples) repository
+1. Clone [examples]({{ examples_url }}) repository
 2. `cd examples`
 3. `omnipackage build c_makefile`
 
