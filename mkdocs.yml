@@ -8,6 +8,7 @@ site_author: "Oleg Antonyan"
 nav:
   - Home: index.md
   - 'Getting started': getting_started.md
+  - 'Self-hosting': self_hosting.md
   - About: about.md
 
 
