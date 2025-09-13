@@ -8,8 +8,8 @@ site_author: "Oleg Antonyan"
 nav:
   - Home: index.md
   - 'Getting started': getting_started.md
+  - 'Building a new project': new_project.md
   - 'Self-hosting': self_hosting.md
-  - About: about.md
 
 extra:
   web_github_url: https://github.com/omnipackage/omnipackage-web
