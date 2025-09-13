@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://docs.omnipackage.org/</loc>
+         <lastmod>2025-09-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.omnipackage.org/getting_started/</loc>
+         <lastmod>2025-09-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.omnipackage.org/new_project/</loc>
+         <lastmod>2025-09-13</lastmod>
+    </url>
+    <url>
+         <loc>https://docs.omnipackage.org/self_hosting/</loc>
+         <lastmod>2025-09-13</lastmod>
+    </url>
+</urlset>
