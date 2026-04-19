@@ -14,7 +14,7 @@ omnipackage --version
 
 ## Building example project locally
 
-1. Clone [examples]({{ examples_url }}) repository
+1. Clone [examples]({{ examples_github_url }}) repository
 2. `cd examples`
 3. `omnipackage build c_makefile`
 
