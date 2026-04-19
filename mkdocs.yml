@@ -9,14 +9,11 @@ nav:
   - Home: index.md
   - 'Getting started': getting_started.md
   - 'Building a new project': new_project.md
-  - 'Self-hosting': self_hosting.md
 
 extra:
-  web_github_url: https://github.com/omnipackage/omnipackage-web
-  agent_github_url: https://github.com/omnipackage/omnipackage-agent-ruby
-  web_hosted_url: https://web.omnipackage.org
+  agent_github_url: https://github.com/omnipackage/omnipackage-rs/
   examples_github_url: https://github.com/omnipackage/examples
-  agent_public_install_url: https://web.omnipackage.org/oleg/omnipackage-agent
+  agent_public_install_url: https://repositories.omnipackage.org/omnipackage-rs/stable/install.html
 
 
 
