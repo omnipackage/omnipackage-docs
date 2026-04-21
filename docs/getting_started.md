@@ -12,15 +12,4 @@ Test your installation
 omnipackage --version
 ```
 
-## Building example project locally
-
-1. Clone [examples]({{ examples_github_url }}) repository
-2. `cd examples`
-3. `omnipackage build c_makefile`
-
-Now you can install the resulting package. For example, Debian 12:
-```
-sudo dpkg -i /tmp/omnipackage-build/omnipackage-example-c-debian_12/output/omnipackage-example-c_0.0.1-0_amd64.deb
-```
-
 WIP
