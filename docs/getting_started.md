@@ -51,7 +51,11 @@ Note that `/tmp` is cleared on reboot on many Linux systems; pick a persistent p
 
 ### Switch to S3 for production
 
-Local repositories are fine for testing, but for production you probably want S3. An example S3 block is already provided in `.omnipackage/config.yml` — swap it into the first `repositories:` entry (or reorder the list) and re-run `omnipackage release .`.
+Local repositories are fine for testing, but for production you probably want S3. An example S3 block is already provided in `.omnipackage/config.yml`. Pick it by name with `--repository`:
+
+```
+omnipackage release . --repository "Example bucket"
+```
 
 ### How secrets flow
 

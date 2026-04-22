@@ -8,6 +8,30 @@ site_author: "Oleg Antonyan"
 nav:
   - Home: index.md
   - 'Getting started': getting_started.md
+  - Guides:
+    - 'How it works': guides/how_it_works.md
+    - 'Signing packages': guides/signing.md
+    - 'Publishing to S3': guides/s3_repository.md
+    - Templates: guides/templates.md
+    - 'CI/CD integration': guides/cicd.md
+  - Configuration:
+    - Overview: configuration/index.md
+    - builds: configuration/builds.md
+    - version_extractors: configuration/version_extractors.md
+    - repositories: configuration/repositories.md
+    - image_caches: configuration/image_caches.md
+    - secrets: configuration/secrets.md
+  - 'CLI reference':
+    - Overview: cli/index.md
+    - build: cli/build.md
+    - publish: cli/publish.md
+    - release: cli/release.md
+    - info: cli/info.md
+    - gpg: cli/gpg.md
+    - portal: cli/portal.md
+    - prime: cli/prime.md
+  - 'Supported distros': distros.md
+  - Examples: examples.md
 
 extra:
   agent_github_url: https://github.com/omnipackage/omnipackage-rs/
