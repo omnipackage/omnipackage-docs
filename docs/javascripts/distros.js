@@ -6,39 +6,66 @@
   const SOURCE_URL = 'https://raw.githubusercontent.com/omnipackage/omnipackage-rs/master/src/distros.yml';
   const REPO_URL = 'https://github.com/omnipackage/omnipackage-rs/blob/master/src/distros.yml';
 
+  const FAMILY_LABELS = {
+    opensuse: 'openSUSE',
+    almalinux: 'AlmaLinux',
+    rockylinux: 'Rocky Linux',
+    debian: 'Debian',
+    ubuntu: 'Ubuntu',
+    fedora: 'Fedora',
+    mageia: 'Mageia',
+  };
+
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 
-  const renderRow = (d) => {
-    let note = '';
-    if (d.deprecated) {
-      note = typeof d.deprecated === 'string'
-        ? `<em>deprecated</em> — ${d.deprecated}`
-        : '<em>deprecated</em>';
+  const familyOf = (d) => (d.id || '').split('_')[0];
+
+  const groupByFamily = (distros) => {
+    const map = new Map();
+    for (const d of distros) {
+      const fam = familyOf(d);
+      if (!map.has(fam)) map.set(fam, []);
+      map.get(fam).push(d);
     }
-    const pkgType = (d.package_type || '').toUpperCase();
+    return map;
+  };
+
+  const renderFamilyRow = (family, items) => {
+    const label = FAMILY_LABELS[family] || family;
+    const stripFamily = (name) => {
+      const stripped = (name || '').replace(label, '').trim();
+      return stripped || name || '';
+    };
+    const versionSpan = (d) =>
+      `<span title="${escapeHtml(d.id)}">${escapeHtml(stripFamily(d.name))}</span>`;
+
+    const active = items.filter((d) => !d.deprecated);
+    const deprecated = items.filter((d) => d.deprecated);
+
+    const activeNames = active.map(versionSpan).join(', ');
+
+    let cell = activeNames || '<em>none</em>';
+    if (deprecated.length) {
+      const lines = deprecated.map((d) => {
+        const reason = typeof d.deprecated === 'string' ? ` — ${d.deprecated}` : '';
+        return `${versionSpan(d)} deprecated${reason}`;
+      });
+      cell += `<br><small><em>${lines.join('<br>')}</em></small>`;
+    }
+
     return `<tr>
-      <td><code>${escapeHtml(d.id)}</code></td>
-      <td>${escapeHtml(d.name)}</td>
-      <td>${escapeHtml(pkgType)}</td>
-      <td>${note}</td>
+      <td>${escapeHtml(label)}</td>
+      <td>${cell}</td>
     </tr>`;
   };
 
-  const renderTable = (items) => {
-    if (!items.length) return '<p>No entries.</p>';
-    return `<table>
-      <thead>
-        <tr>
-          <th>Distro ID</th>
-          <th>Display name</th>
-          <th>Package type</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>${items.map(renderRow).join('')}</tbody>
-    </table>`;
+  const renderTable = (distros) => {
+    if (!distros.length) return '<p>No entries.</p>';
+    const groups = groupByFamily(distros);
+    const rows = [...groups.entries()].map(([fam, items]) => renderFamilyRow(fam, items)).join('');
+    return `<table><tbody>${rows}</tbody></table>`;
   };
 
   const setLoading = (c) => {
@@ -57,13 +84,8 @@
     const data = jsyaml.load(await res.text());
     const distros = data.distros || [];
 
-    // Active entries first (preserve YAML order), deprecated at the bottom.
-    const sorted = [...distros].sort((a, b) =>
-      (a.deprecated ? 1 : 0) - (b.deprecated ? 1 : 0)
-    );
-
-    const deb = sorted.filter((d) => d.package_type === 'deb');
-    const rpm = sorted.filter((d) => d.package_type === 'rpm');
+    const deb = distros.filter((d) => d.package_type === 'deb');
+    const rpm = distros.filter((d) => d.package_type === 'rpm');
 
     if (debContainer) debContainer.innerHTML = renderTable(deb);
     if (rpmContainer) rpmContainer.innerHTML = renderTable(rpm);
