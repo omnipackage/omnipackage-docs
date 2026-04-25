@@ -21,8 +21,7 @@ You should see something like `omnipackage 0.1.4`.
 Clone the [examples repo](https://github.com/omnipackage/examples) and enter the C/Makefile sample:
 
 ```
-git clone https://github.com/omnipackage/examples.git
-cd examples/c_makefile
+git clone https://github.com/omnipackage/examples.git && cd examples/c_makefile
 ```
 
 Generate a GPG key. This key is required to sign the packages. You can use your existing key.
