@@ -42,9 +42,7 @@ omnipackage release .
 
 You'll see the build log for each distro listed in `.omnipackage/config.yml`.
 
-This will create local repositories at `/tmp/omnipackage-repos`. Open `/tmp/omnipackage-repos/install.html` in a browser — it's a generated landing page with copy-paste instructions for adding the repo on each distro. Path `/tmp/omnipackage-repos` is defined in `.omnipackage/config.yml` under `repositories`, and by default the first entry there is used by the `release` command.
-
-Note that `/tmp` is cleared on reboot on many Linux systems; pick a persistent path in `config.yml` if you want the local repo to survive.
+This will create local repositories at `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — it's a generated landing page with copy-paste instructions for adding the repo on each distro. The path is defined in `.omnipackage/config.yml` under `repositories`, and by default the first entry there is used by the `release` command.
 
 ## Next steps
 
