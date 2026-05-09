@@ -2,19 +2,11 @@
 
 Running `omnipackage release` from CI so every push to a release branch (and every tagged release) produces signed packages in your repository.
 
-## Scope
-
-- GitHub Actions workflow template
-- Storing the GPG key and S3 credentials as CI secrets
-- Passing secrets through to `omnipackage` without writing them to disk
-- Using the `prime` command to cache container images between runs
-- Gating releases on version extractors (e.g., only release when the tag matches)
-
 ## GitHub Actions
 
 > Draft — to be refined.
 
-A worked reference lives in [`mpz`](https://github.com/omnipackage/mpz/tree/master/.github/workflows) across four files:
+This guide walks through one suggested setup, lifted from a real-world project: [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire things up differently — different triggers, secret layouts, or job topology — but the shape below is a good starting point. The reference workflows live in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows), spread across four files:
 
 | File | Trigger | Purpose |
 |------|---------|---------|
