@@ -24,7 +24,7 @@ Clone the [examples repo](https://github.com/omnipackage/examples) and enter the
 git clone https://github.com/omnipackage/examples.git && cd examples/c_makefile
 ```
 
-Generate a GPG key. This key is required to sign the packages. You can use your existing key.
+Generate a GPG key. This key is required to sign the packages. You can use your existing key — see [Signing packages](guides/signing.md).
 
 ```
 echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email 'you@example.com' --format base64)" >> .env
