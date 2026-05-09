@@ -184,6 +184,65 @@ To get them:
 
 Skip these if you're not serving R2 through a custom subdomain (no Cloudflare cache to purge), or if you can tolerate edge TTL for repo updates.
 
+## Google Cloud Storage
+
+> Draft — to be refined.
+
+GCS speaks an S3-compatible API. The config block is similar to AWS S3 with GCS-specific credentials and addressing.
+
+### 1. Create the bucket
+
+Console → **Cloud Storage** → **Buckets** → **+ Create**. Pick a region (e.g. `europe-southwest1`); names are globally unique across all of GCS. Set **Access control = Uniform bucket-level access**.
+
+### 2. Service account + HMAC keys
+
+GCS authenticates the S3 API with **HMAC keys**, not JSON service-account files. Bind the key to a dedicated service account so you can rotate it independently.
+
+1. **IAM & Admin** → **Service Accounts** → **+ Create service account**, e.g. `omnipackage-publisher`.
+2. Bucket → **Permissions** → **Grant access**. Principal = service account email; role = **Storage Object Admin**.
+3. **Cloud Storage** → **Settings** → **Interoperability** → **+ Create a key for a service account** → pick the publisher SA.
+4. Copy the access key and secret **once** into your env file as `GCS_HMAC_ACCESS_KEY_ID` and `GCS_HMAC_SECRET_ACCESS_KEY`.
+
+### 3. Make objects publicly readable
+
+Two settings on the bucket:
+
+- **Public access prevention** → set to **Off** / Inactive (Configuration tab). This is GCS's analog of AWS BPA.
+- **Permissions** → **Grant access**: principal `allUsers`, role **Storage Object Viewer**. Confirm the public-access warning.
+
+The bucket header then shows a "Public to internet" badge.
+
+### 4. Repository config
+
+```yaml
+- name: GCS europe-southwest1
+  provider: s3
+  gpg_private_key_base64: "${GPG_PRIVATE_KEY_BASE64}"
+  package_name: "sample-project"
+  s3:
+    bucket: omnipackage-repos
+    path_in_bucket: "sample-project"
+    bucket_public_url: "https://storage.googleapis.com/omnipackage-repos"
+    endpoint: "https://storage.googleapis.com"
+    access_key_id: "${GCS_HMAC_ACCESS_KEY_ID}"
+    secret_access_key: "${GCS_HMAC_SECRET_ACCESS_KEY}"
+    region: europe-southwest1
+    force_path_style: true
+```
+
+Field notes:
+
+- `bucket_public_url` — path-style URL. Don't use virtual-hosted (`<bucket>.storage.googleapis.com`).
+- `endpoint` — single global endpoint; no regional variant.
+- `region` — must match the bucket's actual location. SigV4 is region-bound; don't use `auto`.
+- `force_path_style: true` — required; virtual-hosted style trips signature mismatches against GCS.
+
+### 5. Cache and custom domains
+
+GCS serves public objects with `Cache-Control: public, max-age=3600` by default, so republished repo metadata can be stale for up to an hour. Override the bucket-default Cache-Control or set per-object headers if that matters.
+
+GCS can't serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer + backend bucket in front, or front it with Cloudflare — in the Cloudflare case the existing `cloudflare_zone_id` / `cloudflare_api_token` fields become useful for cache purges, like the R2 setup.
+
 ## Cache invalidation (CloudFront)
 
 > TODO: when CloudFront is added in front of S3, mirror the existing R2/Cloudflare purge flow with `CreateInvalidation`. Path patterns instead of URL prefixes; first 1000 paths/month free, ~$0.005/path after.
