@@ -1,22 +1,32 @@
 # `omnipackage build`
 
-Build packages for the distros defined in `.omnipackage/config.yml`, without publishing.
+Build packages for the distros defined in `.omnipackage/config.yml` without publishing. The result of a successful run is a set of `.rpm` / `.deb` files under `--build-dir`, ready to be picked up by [`publish`](publish.md).
 
 ```
-omnipackage build <project-dir> [flags]
+omnipackage build [project-dir] [flags]
 ```
+
+`project-dir` defaults to `.` — `omnipackage build` from the project root is a complete invocation.
 
 ## Flags
 
-| Flag | Description |
-|------|-------------|
-| `--distros <ids>` | Comma-separated subset of distros to build (default: all defined in config). |
-| `--build-dir <path>` | Where intermediate build artefacts go (default: `.omnipackage/build`). |
-| `--fail-fast` | Stop on the first failing distro instead of building the rest. |
-| `--image-cache <name>` | Use a configured [image cache](../configuration/image_caches.md). |
-| `--version-extractor <name>` | Pick a [version extractor](../configuration/version_extractors.md) by name. |
-| `--container-output` | Stream container output to stdout during the build. |
-| `--disable-container-echo` | Suppress container output entirely. |
-| `--fail-log-lines <n>` | On failure, print the last N lines of the build log. |
+Every flag has a default; the table shows what you get if you omit it.
 
-<!-- TODO: exit codes, sample output -->
+| Flag | Default | Description |
+|------|---------|-------------|
+| `<project-dir>` | `.` | Project root |
+| `--config-path <rel>` | `.omnipackage/config.yml` | Config path relative to the project dir |
+| `--env-file <path>` | `.env` | Env file for `${...}` substitution in `config.yml` |
+| `--distros <ids...>` | **all distros in `builds:`** | Space-separated subset of distro IDs |
+| `--build-dir <path>` | `$TMPDIR/omnipackage-build` | Where per-distro build subdirs live |
+| `--fail-fast` | off | Stop on the first failing distro |
+| `--image-cache <name>` | none | Use a configured [image cache](../configuration/image_caches.md). Requires the cache to be primed first — see [`prime`](prime.md) |
+| `--version-extractor <name>` | first entry in `version_extractors:` | Pick a [version extractor](../configuration/version_extractors.md) by name |
+| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the build process running inside the container is **printed to the terminal**. `null` means nothing is printed. omnipackage's own progress logs always go to stdout, so the default keeps the two streams cleanly separated. The full container log is **always** written to a file under `--build-dir` regardless of this setting |
+| `--disable-container-echo` | off | Disable `set -x` inside the container (less noisy output) |
+| `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise — output already went to the terminal live |
+
+## Notes
+
+- The build matrix is `--distros` (or all configured distros if omitted) intersected with `builds:`. Each entry runs in its own container; one distro's failure doesn't poison the others (unless `--fail-fast`).
+- Pass the same `--build-dir` to a follow-up [`publish`](publish.md) — `publish` reads the built artefacts from there.
