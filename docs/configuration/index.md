@@ -11,6 +11,7 @@ OmniPackage reads `.omnipackage/config.yml` from the project root. This section 
 | [`repositories`](repositories.md) | no | Where to publish built packages |
 | [`image_caches`](image_caches.md) | no | Cached container images to speed up builds |
 | [`secrets`](secrets.md) | no | Environment-variable substitution into `config.yml` |
+| [`ignore_source_files`](ignore_source_files.md) | no | Patterns for files to exclude from the staged source tree |
 
 ## Environment substitution
 

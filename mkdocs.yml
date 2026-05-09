@@ -20,6 +20,7 @@ nav:
       - repositories: configuration/repositories.md
       - image_caches: configuration/image_caches.md
       - secrets: configuration/secrets.md
+      - ignore_source_files: configuration/ignore_source_files.md
   - "CLI reference":
       - Overview: cli/index.md
       - build: cli/build.md
