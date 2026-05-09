@@ -2,21 +2,19 @@
 
 End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM repository.
 
-<!-- TODO: -->
+If you don't already have a preference, **Cloudflare R2 is recommended** — it's the most-tested provider in this project, charges nothing for egress (so serving packages to users is free), and includes 10 GB of free storage.
 
 ## AWS S3
 
-> Draft — to be refined.
-
 ### 1. Create the bucket
 
-S3 console → **Create bucket**. Pick a region (e.g. `eu-central-1`) and a globally-unique name. A convention that works well is to encode the account ID and region into the name, e.g. `omnipackage-repositories-<account-id>-<region>-<suffix>`. Leave "Block all public access" on for now — we'll selectively turn parts of it off in step 3.
+S3 console → **Create bucket**. Pick a region (e.g. `eu-central-1`) and a globally-unique name. Leave "Block all public access" on for now — step 3 turns the right parts of it off.
 
 ### 2. Create an IAM user with access keys
 
 Access keys come from **IAM**, not S3. Don't use the root account.
 
-1. IAM → **Users** → **Create user** (e.g. `omnipackage-publisher`). Programmatic access only; no console login.
+1. IAM → **Users** → **Create user** (e.g. `omnipackage-publisher`). Programmatic access only, no console login.
 2. Attach an inline policy scoped to this single bucket:
 
     ```json
@@ -37,22 +35,20 @@ Access keys come from **IAM**, not S3. Don't use the root account.
     }
     ```
 
-3. User → **Security credentials** → **Create access key** → "Application running outside AWS". The Access Key ID and Secret Access Key are shown **once** — copy both into your env file as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. The secret cannot be retrieved later, only rotated.
+3. **Security credentials** → **Create access key** → "Application running outside AWS". Copy both into your env file as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` — the secret is shown only once and cannot be retrieved later.
 
-If publishing from GitHub Actions, prefer OIDC + an IAM role over static keys.
+From GitHub Actions, prefer OIDC + an IAM role over static keys.
 
 ### 3. Make objects publicly readable
 
-AWS S3 buckets are private by default with two independent gates. Both must allow public reads.
+S3 buckets are private by default behind two independent gates; both must allow public reads.
 
-**Block Public Access (BPA)** — bucket-level master switch.
-
-S3 → bucket → **Permissions** → **Block public access (bucket settings)** → Edit. Uncheck at minimum:
+**Block Public Access (BPA)** — bucket-level master switch. **Permissions** → **Block public access (bucket settings)** → Edit. Uncheck:
 
 - "Block public access to buckets and objects granted through *new* public bucket or access point policies"
 - "Block public access to buckets and objects granted through *any* public bucket or access point policies"
 
-Leave the two ACL-related boxes checked — modern buckets use policies, not ACLs.
+Leave the two ACL boxes checked — modern buckets use policies, not ACLs.
 
 **Bucket policy** — the actual grant. Same Permissions tab → **Bucket policy** → Edit:
 
@@ -71,11 +67,7 @@ Leave the two ACL-related boxes checked — modern buckets use policies, not ACL
 }
 ```
 
-Note `Resource` ends in `/*` (objects), not the bare bucket ARN.
-
-After both, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
-
-ACLs are disabled by default on new buckets (Object Ownership = "Bucket owner enforced"). The policy above doesn't depend on ACLs — don't re-enable them.
+The `Resource` ARN ends in `/*` (objects), not the bare bucket. Once both are in place, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
 
 ### 4. Repository config
 
@@ -97,40 +89,38 @@ ACLs are disabled by default on new buckets (Object Ownership = "Bucket owner en
 
 Field notes:
 
-- `bucket_public_url` — the URL clients will fetch from. The virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`) gives HTTPS out of the box once the bucket policy in step 3 is in place. Don't use the `s3-website` endpoint — HTTP-only, requires static website hosting. Swap this to your custom domain once CloudFront is in front.
-- `endpoint` — the regional S3 API endpoint, e.g. `https://s3.eu-central-1.amazonaws.com`.
-- `region` — the actual AWS region (`eu-central-1`, `us-east-1`, …). AWS requires it for SigV4. (R2 uses `auto`; AWS does not.)
-- `force_path_style: false` — AWS uses virtual-hosted-style; path-style is deprecated. Bucket names without dots work cleanly with HTTPS in virtual-hosted style.
+- `bucket_public_url` — virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`). Gives HTTPS once the bucket policy is in place. Don't use the `s3-website` endpoint (HTTP-only).
+- `endpoint` — regional S3 API endpoint, e.g. `https://s3.eu-central-1.amazonaws.com`.
+- `region` — actual AWS region. AWS requires it for SigV4 (R2 uses `auto`; AWS does not).
+- `force_path_style: false` — AWS uses virtual-hosted-style; path-style is deprecated.
 
 ### 5. Troubleshooting
 
-`AccessDenied` on the public URL almost always means one of:
+`AccessDenied` on the public URL almost always means:
 
-1. BPA still blocking the policy — check the Permissions tab; the bucket should *not* show "Bucket and objects not public" once both BPA and the policy are correct (it'll say "Public").
-2. Bucket policy missing `/*` on the resource ARN, or wrong bucket name.
-3. Object actually doesn't exist — verify with `aws s3 ls s3://<bucket-name>/<prefix>/`. AWS returns `AccessDenied` instead of `NoSuchKey` when `s3:ListBucket` isn't granted to the principal, which can mask missing objects.
+1. **BPA still blocking the policy.** Permissions tab should show "Public" once both BPA and the policy are correct.
+2. **Bucket policy missing `/*`** on the resource ARN, or wrong bucket name.
+3. **Object doesn't exist.** Verify with `aws s3 ls s3://<bucket>/<prefix>/`. AWS returns `AccessDenied` instead of `NoSuchKey` when `s3:ListBucket` isn't granted, masking missing objects.
 
 ## Cloudflare R2
 
-> Draft — to be refined.
-
-R2 is S3-compatible but has a few quirks that matter for the config block.
+R2 is S3-compatible with a few quirks.
 
 ### 1. Create the bucket
 
-Cloudflare dashboard → **R2** → **Create bucket**. Name it (e.g. `repositories-test`); R2 buckets are scoped to your account, not globally unique.
+Cloudflare dashboard → **R2** → **Create bucket**. R2 names are scoped to your account, not globally unique.
 
 ### 2. Make it public via a custom subdomain
 
-R2 does not expose a public `*.r2.cloudflarestorage.com` URL — that endpoint is API-only and requires signed requests. The supported way to serve a bucket publicly is to attach a **custom subdomain** under a Cloudflare-managed zone:
+R2 doesn't expose a public `*.r2.cloudflarestorage.com` URL — that endpoint is API-only and requires signed requests. Public access requires a **custom subdomain** under a Cloudflare-managed zone:
 
-Bucket → **Settings** → **Public access** → **Custom Domains** → **Connect Domain** → enter e.g. `repositories-test.omnipackage.org`. Cloudflare provisions the DNS record and TLS cert automatically (the zone must already be on Cloudflare).
+Bucket → **Settings** → **Public access** → **Custom Domains** → **Connect Domain** → enter e.g. `repositories-test.omnipackage.org`. Cloudflare provisions DNS and TLS automatically.
 
-The other public option, `r2.dev` subdomains, is rate-limited and meant for development; don't use it for a real repo.
+The `r2.dev` subdomain is rate-limited and meant for development; don't use it for a real repo.
 
 ### 3. Create R2 API credentials
 
-R2 dashboard → **Manage R2 API Tokens** → **Create API token**. Permissions: **Object Read & Write**, scoped to the specific bucket. Cloudflare returns an **Access Key ID** and **Secret Access Key** (S3-compatible) plus the **S3 API endpoint** (`https://<account-id>.r2.cloudflarestorage.com`). Copy all three into your env file.
+R2 dashboard → **Manage R2 API Tokens** → **Create API token**. Permissions: **Object Read & Write**, scoped to the bucket. Cloudflare returns an Access Key ID, Secret Access Key, and the S3 API endpoint (`https://<account-id>.r2.cloudflarestorage.com`).
 
 ### 4. Repository config
 
@@ -155,49 +145,45 @@ R2 dashboard → **Manage R2 API Tokens** → **Create API token**. Permissions:
 
 Field notes:
 
-- `bucket_public_url` — your custom subdomain. This is what ends up in the generated install page; it must be the public-facing host, **not** the R2 API endpoint.
-- `endpoint` — the R2 S3 API endpoint, account-scoped: `https://<account-id>.r2.cloudflarestorage.com`. Used only for uploads.
-- `region: auto` — R2 ignores region for routing; SigV4 still needs *some* value, and `auto` is what Cloudflare documents.
-- `force_path_style: true` — required. R2's endpoint is account-scoped, so the bucket goes in the path (`<endpoint>/<bucket>/<key>`), not as a subdomain prefix. Virtual-hosted-style does not work against R2.
+- `bucket_public_url` — your custom subdomain. Must be the public-facing host, **not** the R2 API endpoint.
+- `endpoint` — the R2 S3 API endpoint, account-scoped. Used only for uploads.
+- `region: auto` — R2 ignores region; SigV4 still needs *some* value, and `auto` is what Cloudflare documents.
+- `force_path_style: true` — required. R2's endpoint is account-scoped, so the bucket goes in the path.
 
 ### 5. CDN cache purge (optional)
 
-Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. After republishing, stale repo metadata (`Release`, `Packages.gz`, `repodata/`) can be served until TTL expires.
+Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. Without purging, stale repo metadata (`Release`, `Packages.gz`, `repodata/`) can be served until TTL expires.
 
-If you set both `cloudflare_zone_id` and `cloudflare_api_token`, omnipackage calls Cloudflare's `purge_cache` API by URL prefix after each upload (`src/publish.rs:101`). Both fields are optional and treated as a pair — if either is missing, the purge step is skipped silently. A purge failure is logged as a warning and does not fail the publish.
+If both `cloudflare_zone_id` and `cloudflare_api_token` are set, omnipackage purges the affected URL prefix after each upload. They're treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but doesn't fail the publish.
 
 To get them:
 
 - **Zone ID** — Cloudflare dashboard → your domain → **Overview** sidebar (right side).
-- **API token** — **My Profile** → **API Tokens** → **Create Token** → custom token with permission **Zone → Cache Purge → Purge** scoped to the specific zone. Don't use the global API key.
+- **API token** — **My Profile** → **API Tokens** → **Create Token** → custom token with **Zone → Cache Purge → Purge** scoped to the zone. Don't use the global API key.
 
-Skip these if you're not serving R2 through a custom subdomain (no Cloudflare cache to purge), or if you can tolerate edge TTL for repo updates.
+Skip if you can tolerate edge TTL on repo updates.
 
 ## Google Cloud Storage
 
-> Draft — to be refined.
-
-GCS speaks an S3-compatible API. The config block is similar to AWS S3 with GCS-specific credentials and addressing.
+GCS speaks an S3-compatible API.
 
 ### 1. Create the bucket
 
-Console → **Cloud Storage** → **Buckets** → **+ Create**. Pick a region (e.g. `europe-southwest1`); names are globally unique across all of GCS. Set **Access control = Uniform bucket-level access**.
+Console → **Cloud Storage** → **Buckets** → **+ Create**. Names are globally unique. Set **Access control = Uniform bucket-level access**.
 
 ### 2. Service account + HMAC keys
 
-GCS authenticates the S3 API with **HMAC keys**, not JSON service-account files. Bind the key to a dedicated service account so you can rotate it independently.
+GCS authenticates the S3 API with **HMAC keys**, not JSON service-account files. Bind the key to a dedicated service account so it can be rotated independently.
 
-1. **IAM & Admin** → **Service Accounts** → **+ Create service account**, e.g. `omnipackage-publisher`.
+1. **IAM & Admin** → **Service Accounts** → create `omnipackage-publisher`.
 2. Bucket → **Permissions** → **Grant access**. Principal = service account email; role = **Storage Object Admin**.
 3. **Cloud Storage** → **Settings** → **Interoperability** → **+ Create a key for a service account** → pick the publisher SA.
-4. Copy the access key and secret **once** into your env file as `GCS_HMAC_ACCESS_KEY_ID` and `GCS_HMAC_SECRET_ACCESS_KEY`.
+4. Copy the access key and secret into your env file as `GCS_HMAC_ACCESS_KEY_ID` and `GCS_HMAC_SECRET_ACCESS_KEY`.
 
 ### 3. Make objects publicly readable
 
-Two settings on the bucket:
-
-- **Public access prevention** → set to **Off** / Inactive (Configuration tab). This is GCS's analog of AWS BPA.
-- **Permissions** → **Grant access**: principal `allUsers`, role **Storage Object Viewer**. Confirm the public-access warning.
+- **Public access prevention** (Configuration tab) → **Off**.
+- **Permissions** → **Grant access**: principal `allUsers`, role **Storage Object Viewer**.
 
 The bucket header then shows a "Public to internet" badge.
 
@@ -221,17 +207,13 @@ The bucket header then shows a "Public to internet" badge.
 
 Field notes:
 
-- `bucket_public_url` — path-style URL. Don't use virtual-hosted (`<bucket>.storage.googleapis.com`).
+- `bucket_public_url` — path-style. Don't use virtual-hosted (`<bucket>.storage.googleapis.com`).
 - `endpoint` — single global endpoint; no regional variant.
 - `region` — must match the bucket's actual location. SigV4 is region-bound; don't use `auto`.
-- `force_path_style: true` — required; virtual-hosted style trips signature mismatches against GCS.
+- `force_path_style: true` — required; virtual-hosted style trips signature mismatches.
 
 ### 5. Cache and custom domains
 
 GCS serves public objects with `Cache-Control: public, max-age=3600` by default, so republished repo metadata can be stale for up to an hour. Override the bucket-default Cache-Control or set per-object headers if that matters.
 
-GCS can't serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer + backend bucket in front, or front it with Cloudflare — in the Cloudflare case the existing `cloudflare_zone_id` / `cloudflare_api_token` fields become useful for cache purges, like the R2 setup.
-
-## Cache invalidation (CloudFront)
-
-> TODO: when CloudFront is added in front of S3, mirror the existing R2/Cloudflare purge flow with `CreateInvalidation`. Path patterns instead of URL prefixes; first 1000 paths/month free, ~$0.005/path after.
+GCS can't serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer + backend bucket in front, or front it with Cloudflare — in the Cloudflare case the `cloudflare_zone_id` / `cloudflare_api_token` fields become useful for cache purges, the same as the R2 setup.
