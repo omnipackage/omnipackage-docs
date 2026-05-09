@@ -24,7 +24,7 @@ flowchart TD
 
 ### Developer side
 
-1. **Scaffold** — `omnipackage init` detects the project type by looking for marker files (`Cargo.toml`, `go.mod`, `CMakeLists.txt`, `pyproject.toml`, …) and renders a starter `.omnipackage/config.yml` plus per-format template files (RPM `.spec.liquid`, `debian/` directory).
+1. **Scaffold** *(optional)* — `omnipackage init` detects the project type by looking for marker files (`Cargo.toml`, `go.mod`, `CMakeLists.txt`, `pyproject.toml`, …) and renders a starter `.omnipackage/config.yml` plus per-format template files (RPM `.spec.liquid`, `debian/` directory). Detection and the generated templates are best-effort starting points, not finished configs — expect to edit `config.yml`, the spec, and the `debian/` files to match what your project actually builds and ships. Skip this step entirely if you'd rather hand-write the config from one of the [examples](../examples.md).
 
 2. **Release** — `omnipackage release` reads the config and, for each configured distro:
     - Pulls a container image for that distro (`opensuse/leap:16.0`, `fedora:42`, `debian:trixie`, etc.).
