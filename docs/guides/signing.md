@@ -2,7 +2,7 @@
 
 OmniPackage signs every published `.deb` / `.rpm` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM) with a GPG private key. End users import the matching public key once when they add the repository, and `apt` / `dnf` / `zypper` reject any package or metadata file whose signature doesn't verify — so the key is what makes a published repository trustable.
 
-The key is referenced from `config.yml` as base64-wrapped ASCII armor, normally via `${GPG_KEY}` substituted from a `.env` file:
+The key is referenced from `config.yml` as base64-wrapped ASCII armor, normally via `${GPG_KEY}` — substituted from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment.
 
 ```yaml
 repositories:
