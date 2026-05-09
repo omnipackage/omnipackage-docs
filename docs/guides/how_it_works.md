@@ -37,6 +37,8 @@ flowchart TD
 
 The `omnipackage prime` command sits orthogonally to this — it pre-runs the distro setup commands and snapshots the resulting container image to a registry, so subsequent releases skip the slow `apt-get install build-essential` phase. See [`image_caches`](../configuration/image_caches.md).
 
+`omnipackage` is a CLI — it runs anywhere a container runtime does (your laptop, a VPS, any CI). One common setup is free end-to-end: GitHub Actions covers the build on the free tier for public repositories, and S3-compatible storage is either cheap (AWS) or free under common limits — Cloudflare R2, Backblaze B2, and Google Cloud Storage all have free tiers generous enough for small-to-mid projects.
+
 ### User side
 
 What ends up at `<bucket_public_url>/<path_in_bucket>/install.html` is what a real end user sees:
