@@ -18,7 +18,7 @@ OmniPackage ships a single binary, `omnipackage`, with several subcommands.
 
 | Flag | Description |
 |------|-------------|
-| `--container-runtime <docker\|podman>` | Override autodetection. Also `OMNIPACKAGE_CONTAINER_RUNTIME`. |
+| `--container-runtime <docker|podman>` | Override autodetection. Also env var `OMNIPACKAGE_CONTAINER_RUNTIME`. |
 | `--env-file <path>` | Env file to load (default: `.env` in project root). |
 
 <!-- TODO: -->
