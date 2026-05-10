@@ -61,3 +61,11 @@ So: use `before_build_script` freely for a modern toolchain. Don't use it to pap
 `omnipackage release` succeeding means the package built and the repository signed cleanly. It doesn't mean the package *installs and runs* on a fresh system. Build hosts have headers, build tools, and prior dependency installations that production user machines don't. A package that depends on a `-devel` / `-dev` package by mistake, or that links a `before_build_script`-installed library, will build fine and fail on `apt install` (or at first launch) for the first user who tries it.
 
 [`omnipackage portal`](../cli/portal.md) gives you exactly the right environment: an interactive root shell in the plain distro base image, no `setup` applied, container thrown away on `exit`. Open one per distro, add your published repo, `apt install <your-package>` (or `dnf install` / `zypper install`), then run the binary — the snippet from your generated `install.html` is what to paste. Do this at least once per distro before announcing a release.
+
+## Trust is in the developer, not the channel
+
+A question worth answering up-front when shipping a third-party repository: "why should a user trust me as the package provider?"
+
+The honest answer is that the trust decision isn't about the distribution channel. Users trust *you* — the developer — or they don't. If they trust you, they'll `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your OmniPackage repo. If they don't, none of those work either — the channel doesn't supply trust that wasn't already there.
+
+OmniPackage doesn't move the needle in either direction. It's open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only provides shims that drive the standard Linux packaging tools — `rpmbuild`, `debuild`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.
