@@ -8,6 +8,19 @@ The user-facing contract: **a user adds your OmniPackage repository and nothing 
 
 That contract is what keeps the generated `install.html` page a four-line snippet instead of a small howto. The rest of this page is downstream of holding that line.
 
+## One project per repository
+
+Host a single project per OmniPackage repository. The generated install flow assumes it, and the user experience falls apart otherwise.
+
+`install.html` ends in `apt install <your-package>` — one package, no ambiguity. Stacking unrelated projects into the same bucket breaks that in one of two ways:
+
+- **Non-overlapping audiences.** Users who add your repo see package names they don't recognise. Every `apt search` hit becomes "what's this, and why is it on my system?" — the trust signal of a focused repo is gone.
+- **Overlapping audiences.** Users installing more than one of your projects hit a duplicate-source warning unless the install page for project B detects that project A's repo is already configured and skips the add step. Doing that portably across `apt` / `dnf` / `zypper` is extra shell logic the install snippet doesn't currently carry.
+
+The install page itself is one-project-shaped, too — it names a single package in the final command, and making it work for "add this repo, then pick from the list" is workable but tricky enough that it isn't supported today. This may change in a future release; until then, one bucket per project. Buckets and prefixes are cheap (see [`s3_repository`](s3_repository.md)), so the developer-side cost is low.
+
+The occasional pushback is user-side: some people don't love having multiple third-party repos on their system. Fair, but the users who object on those grounds typically wouldn't accept *one* third-party repo either — the trust decision is per-source, not per-package, and the system-side cost of three small focused repos isn't meaningfully different from one large one.
+
 ## Runtime dependencies must be in the distro's standard repos
 
 Every package in `runtime_dependencies` — and every shared library your binary links at run time — must resolve from the distro's default repositories: `main`/`universe` on Debian and Ubuntu, the default repos on Fedora, openSUSE, AlmaLinux, Rocky, etc. Those are the repositories every install of the distro already has configured.
