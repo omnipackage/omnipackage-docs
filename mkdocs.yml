@@ -13,6 +13,7 @@ nav:
       - "Publishing to S3": guides/s3_repository.md
       - Templates: guides/templates.md
       - "CI/CD integration": guides/cicd.md
+      - "Best practices": guides/best_practices.md
   - Configuration:
       - Overview: configuration/index.md
       - builds: configuration/builds.md
