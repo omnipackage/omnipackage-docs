@@ -52,4 +52,4 @@ After install, users get updates the way they get updates for everything else �
 
 - Build new package formats. RPM and DEB only. Flatpak/Snap/AppImage/AUR/Nix are different bets — see [About](https://omnipackage.org/about) for why.
 - Host your repository. You bring the bucket. The trade-off is no vendor lock-in and your packages live in storage you control.
-- Sandbox installed software. Packages run with the same privileges any `apt install` package gets — there's no Flatpak-style isolation.
+- Sandbox installed software. Packages run with the same privileges any `apt install` package gets — there's no Flatpak-style isolation unless you explicitly ship it as part of your package (e.g. an AppArmor / SELinux profile, a `bwrap` / `firejail` wrapper around your binary).
