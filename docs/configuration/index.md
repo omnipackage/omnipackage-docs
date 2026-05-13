@@ -15,8 +15,8 @@ OmniPackage reads `.omnipackage/config.yml` from the project root. This section 
 
 ## Environment substitution
 
-Any string value in `config.yml` can reference an environment variable with `${VAR}` syntax. Values resolve from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment. Only variables actually referenced in `config.yml` are consumed.
+Any string in `config.yml` can reference an environment variable with `${VAR}`. Values resolve from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment. Only variables actually referenced in `config.yml` are consumed.
 
-A `.env` file is the recommended default because it keeps every value in one place — the same file works for local runs and copy-pastes cleanly into a single CI secret. In CI specifically, passing values directly through the runner's environment (per-secret env vars on the step) can be cleaner if you want fine-grained per-secret rotation; both styles work, and they can be mixed.
+A `.env` file is the recommended default: every value lives in one place, the same file works for local runs, and it copy-pastes cleanly into a single CI secret. In CI, passing values directly through the runner's environment (per-secret env vars on the step) can be cleaner if you want per-secret rotation. Both styles work and can be mixed.
 
 <!-- TODO: pointer to a "minimal config" example -->

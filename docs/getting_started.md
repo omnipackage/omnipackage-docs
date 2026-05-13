@@ -1,15 +1,16 @@
 # Getting started
 
-OmniPackage turns a source project into signed DEB and RPM repositories. This page walks through installing the CLI and building the bundled C example end-to-end.
+This page installs the CLI and builds the bundled C example end-to-end.
 
 ## Install the CLI
 
-There are two ways to install it:
+Two options:
 
 1. [OmniPackage repositories]({{ agent_public_install_url }})
-2. [Source code]({{ agent_github_url }}) — requires Rust 1.85+ (2024 edition)
+2. [Source]({{ agent_github_url }}) — requires Rust 1.85+ (2024 edition)
 
-Test your installation:
+Verify:
+
 ```
 omnipackage --version
 ```
@@ -24,31 +25,31 @@ Clone the [examples repo](https://github.com/omnipackage/examples) and enter the
 git clone https://github.com/omnipackage/examples.git && cd examples/c_makefile
 ```
 
-Generate a GPG key. This key is required to sign the packages. You can use your existing key — see [Signing packages](guides/signing.md).
+Generate a GPG signing key. You can also reuse an existing key — see [Signing packages](guides/signing.md).
 
 ```
 echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email 'you@example.com' --format base64)" >> .env
 ```
 
-The key is ASCII-armored and then base64-encoded so it can live in an env variable without newline escaping.
+The key is ASCII-armored, then base64-encoded so it fits in an env variable without newline escaping.
 
-By default omnipackage expects a `.env` file in the root of the project, but it can be overridden by the `--env-file` option. `.env` now holds your private signing key — keep it out of version control (the examples repo already gitignores it).
+OmniPackage reads `.env` from the project root by default; override with `--env-file`. `.env` now holds your private signing key — keep it out of version control (the examples repo already gitignores it).
 
-Run the `release` command (`.` is the project directory containing `.omnipackage/config.yml`):
+Run `release` (`.` is the project directory containing `.omnipackage/config.yml`):
 
 ```
 omnipackage release .
 ```
 
-You'll see the build log for each distro listed in `.omnipackage/config.yml`.
+The build log streams for each distro in `.omnipackage/config.yml`.
 
-This will create local repositories at `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — it's a generated landing page with copy-paste instructions for adding the repo on each distro. The path is defined in `.omnipackage/config.yml` under `repositories`, and by default the first entry there is used by the `release` command.
+The command creates local repositories at `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
 
 ## Next steps
 
 ### Switch to S3 for production
 
-Local repositories are fine for testing, but for production you probably want S3. An example S3 block is already provided in `.omnipackage/config.yml`. Pick it by name with `--repository`:
+Local repositories are fine for testing; production usually means S3. The example config already includes an S3 block. Select it by name:
 
 ```
 omnipackage release . --repository "Example bucket"
@@ -56,4 +57,4 @@ omnipackage release . --repository "Example bucket"
 
 ### How secrets flow
 
-All secrets must be declared in `config.yml` and passed from env via `${...}` syntax. `config.yml` stays the only source of truth; `.env` (or any other env file, or the actual environment) holds the values. There are no hidden env settings beyond what's declared in config.
+Secrets must be declared in `config.yml` and passed from env via `${...}`. `config.yml` is the single source of truth; `.env` (or any other env file, or the process environment) holds the values. There are no hidden env settings beyond what's declared in config.

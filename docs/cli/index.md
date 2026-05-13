@@ -19,13 +19,13 @@ OmniPackage ships a single binary, `omnipackage`, with several subcommands.
 
 | Flag | Description |
 |------|-------------|
-| `--container-runtime <docker|podman>` | Override container runtime autodetection. Also settable via `OMNIPACKAGE_CONTAINER_RUNTIME`. |
+| `--container-runtime <docker|podman>` | Override container runtime autodetection. Also settable via `OMNIPACKAGE_CONTAINER_RUNTIME` |
 
 If neither is set, `podman` is preferred when available, otherwise `docker`. The command fails if neither is in `$PATH`.
 
 ## Common per-command flags
 
-Most commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a sensible default — most invocations only need to set `<project-dir>` (and even that defaults to the current directory).
+Most commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a default — most invocations only need `<project-dir>` (and that defaults to the current directory).
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -39,10 +39,10 @@ Most commands that touch the project (`build`, `publish`, `release`, `prime`, `i
 
 ## Common logging flags
 
-`build`, `publish`, `release`, and `prime` also share these. omnipackage's own progress logs always go to stdout; the flags below control output from the process running **inside** the container. The full container log is always written to disk under `--build-dir` regardless of these settings:
+`build`, `publish`, `release`, and `prime` share these. OmniPackage's own progress logs always go to stdout; the flags below control output from the process running **inside** the container. The full container log is always written to disk under `--build-dir`, regardless of these settings.
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--container-output <stderr|stdout|null>` | `stderr` | Where the container's stdout/stderr is **printed to the terminal**. `null` means no terminal output. The default keeps container output on stderr so it doesn't intermingle with omnipackage's own stdout logs |
+| `--container-output <stderr|stdout|null>` | `stderr` | Where the container's stdout/stderr is **printed to the terminal**. `null` means no terminal output. The default keeps container output on stderr so it doesn't intermingle with OmniPackage's own stdout logs |
 | `--disable-container-echo` | off (`set -x` enabled inside the container) | Quieter container output |
-| `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log so the user sees what happened. Ignored otherwise (output already went to the terminal live) |
+| `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise (output already went to the terminal live) |

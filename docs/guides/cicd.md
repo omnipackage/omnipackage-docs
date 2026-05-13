@@ -1,21 +1,21 @@
 # CI/CD integration
 
-Running `omnipackage release` from CI so every push, tag, or other trigger produces signed packages in your repository.
+Running `omnipackage release` from CI so every push, tag, or other trigger produces signed packages.
 
 ## GitHub Actions
 
-One suggested setup, lifted from [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire triggers, secrets, and job topology differently; the shape below is a good starting point. The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
+A suggested setup, lifted from [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire triggers, secrets, and job topology differently; the shape below is a good starting point. The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
 
 | File | Trigger | Purpose |
 |------|---------|---------|
-| `_omnipackage.yml` | `workflow_call` | Reusable release pipeline. |
-| `omnipackage-next.yml` | Push to `master` | Rolling **next** channel. |
-| `omnipackage-stable.yml` | GitHub `release` published | **Stable** channel from a tagged release. |
-| `refresh-omnipackage-cache.yml` | Monthly cron + manual | Re-primes the container image cache. |
+| `_omnipackage.yml` | `workflow_call` | Reusable release pipeline |
+| `omnipackage-next.yml` | Push to `master` | Rolling **next** channel |
+| `omnipackage-stable.yml` | GitHub `release` published | **Stable** channel from a tagged release |
+| `refresh-omnipackage-cache.yml` | Monthly cron + manual | Re-primes the container image cache |
 
 When-to-release lives in the trigger wrappers; how-to-release lives in the shared workflow. The two channels differ only in which `repositories:` entry they publish to and which `version_extractor` they use.
 
-The split itself is optional — it's a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow that publishes to a single `repositories:` entry works just as well. Drop the wrapper you don't need and call the pipeline directly.
+The split is optional — a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you don't need and call the pipeline directly.
 
 ### The shared workflow
 
@@ -76,7 +76,7 @@ Field notes:
 
 - `list-distros` emits a JSON array of distro IDs that `fromJson()` expands into the `release` matrix. Adding a build target to `config.yml` widens the matrix automatically.
 - `concurrency.group` keyed on `(repository, distro)` with `cancel-in-progress: false` queues same-channel runs instead of racing — concurrent writers corrupt repo metadata (`Release`, `Packages.gz`, `repodata/`).
-- `fail-fast: false` lets one distro's failure leave the other distros' packages published.
+- `fail-fast: false` lets one distro's failure leave the others' packages published.
 - `--image-cache github` references the `image_caches:` entry below.
 
 ### Stable vs next triggers
@@ -102,7 +102,7 @@ jobs:
       version_extractor: "git"
 ```
 
-`version_extractor: "git"` derives a unique, monotonic version from the commit. Swap `push:` for `workflow_run:` if you only want green CI commits to publish.
+`version_extractor: "git"` derives a unique, monotonic version from the commit. Swap `push:` for `workflow_run:` to only publish from green CI commits.
 
 **Stable** — `omnipackage-stable.yml`. Only when a GitHub release is published:
 
@@ -185,6 +185,6 @@ The three `GITHUB_REGISTRY_*` env vars come from the `.env` blob.
 
 ### Secrets
 
-`OMNIPACKAGE_DOTENV` is a convenience: paste the entire local `.env` into one multi-line GitHub Actions secret, write it back verbatim in CI, and rotate in one place. The plain pattern (one secret per env var, exposed via `env:` on the step) works equally well; the two can also be mixed.
+`OMNIPACKAGE_DOTENV` is a convenience: paste the entire local `.env` into one multi-line GitHub Actions secret, write it back verbatim in CI, and rotate in one place. The plain pattern (one secret per env var, exposed via `env:` on the step) works equally well; the two can be mixed.
 
 `.env` lives in `$GITHUB_WORKSPACE`, gets discarded with the runner, isn't uploaded as an artifact, and isn't visible to the build container unless `config.yml` explicitly maps it.

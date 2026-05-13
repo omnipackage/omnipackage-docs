@@ -1,6 +1,6 @@
 # `omnipackage publish`
 
-Upload already-built packages to a [repository](../configuration/repositories.md). Assumes [`omnipackage build`](build.md) ran first **with the same `--build-dir`** — `publish` reads the built `.rpm` / `.deb` artefacts from that directory and won't find anything if the prior build wrote elsewhere. Use [`omnipackage release`](release.md) if you'd rather do build + publish in one shot without tracking the build dir.
+Upload already-built packages to a [repository](../configuration/repositories.md). Assumes [`omnipackage build`](build.md) ran first **with the same `--build-dir`** — `publish` reads the built `.rpm` / `.deb` artefacts from there and won't find them if the prior build wrote elsewhere. Use [`omnipackage release`](release.md) to do build + publish in one shot without tracking the build dir.
 
 ```
 omnipackage publish [project-dir] [flags]
@@ -21,11 +21,11 @@ omnipackage publish [project-dir] [flags]
 | `--image-cache <name>` | none | Image cache to use for the repo-metadata generation containers (`createrepo_c`, `dpkg-scanpackages`) |
 | `--repository <name>` | first entry in `repositories:` | Which `repositories:` entry to publish to |
 | `--custom-install-page <path>` | built-in template | Override the generated `install.html` template |
-| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the process running inside the container is **printed to the terminal**. `null` means nothing is printed. omnipackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
+| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the process running inside the container is **printed to the terminal**. `null` means nothing is printed. OmniPackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
 | `--disable-container-echo` | off | Disable `set -x` inside the container (less noisy output) |
 | `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise |
 
-## What `publish` actually does
+## What `publish` does
 
 For each distro:
 

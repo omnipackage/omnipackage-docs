@@ -1,6 +1,6 @@
 # `version_extractors`
 
-A version extractor decides what version string gets stamped into the built package. At least one is required. The `release` and `build` commands pick one by name via `--version-extractor <name>`.
+A version extractor produces the version string stamped into the built package. At least one is required. `release` and `build` select one with `--version-extractor <name>`.
 
 ## Providers
 
@@ -19,7 +19,7 @@ version_extractors:
 
 ### `shell`
 
-Runs a shell command; stdout (trimmed) becomes the version.
+Runs a shell command; stdout (trimmed) is the version.
 
 ```yaml
 version_extractors:

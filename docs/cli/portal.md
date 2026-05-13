@@ -6,14 +6,14 @@ Open an interactive `bash` shell inside the base container image for a given dis
 omnipackage portal <distro> [flags]
 ```
 
-`<distro>` is required (positional) — it's the distro ID, e.g. `fedora_42` or `debian_13`. See [Supported distros](../distros.md) for the full list.
+`<distro>` is the distro ID, e.g. `fedora_42` or `debian_13`. See [Supported distros](../distros.md) for the full list.
 
 ## Flags
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `<distro>` | — (required) | Distro ID |
-| `--build-dir <path>` | `$TMPDIR/omnipackage-build` | Bind-mounted into the container at `/<basename-of-build-dir>`, so you can move files between host and container |
+| `--build-dir <path>` | `$TMPDIR/omnipackage-build` | Bind-mounted into the container at `/<basename-of-build-dir>` so you can move files between host and container |
 
 ## What you get
 
@@ -22,7 +22,7 @@ omnipackage portal <distro> [flags]
 - `--build-dir` mounted at `/<basename>` (so `/tmp/omnipackage-build` becomes `/omnipackage-build` inside).
 - `--rm` semantics — the container is discarded when you `exit`, no state persists between portal sessions.
 
-To find the right package name for a `build_dependencies` entry:
+Finding the right package name for a `build_dependencies` entry:
 
 ```sh
 omnipackage portal fedora_42

@@ -1,6 +1,6 @@
 # `omnipackage release`
 
-Build and publish in one pass per distro. The most common command in CI — most users only ever run `release`, not the separate `build` / `publish` pair.
+Build and publish in one pass per distro. The most common command in CI — most users only run `release`, not the separate `build` / `publish` pair.
 
 ```
 omnipackage release [project-dir] [flags]
@@ -26,11 +26,11 @@ The union of `build` and `publish` flags. Every flag has a default; the table sh
 | `--repository <name>` | first entry in `repositories:` | Which `repositories:` entry to publish to |
 | `--version-extractor <name>` | first entry in `version_extractors:` | Pick a [version extractor](../configuration/version_extractors.md) by name |
 | `--custom-install-page <path>` | built-in template | Override the generated `install.html` template |
-| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the build process running inside the container is **printed to the terminal**. `null` means nothing is printed. omnipackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
+| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the build process running inside the container is **printed to the terminal**. `null` means nothing is printed. OmniPackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
 | `--disable-container-echo` | off | Disable `set -x` inside the container (less noisy output) |
 | `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise |
 
-## When to use `release` vs. separate `build` + `publish`
+## `release` vs. separate `build` + `publish`
 
 - **`release`** — the default. Everything happens in the same container per distro, so it's also faster than the two-step pair.
-- **`build` then `publish`** — useful when you want to inspect the artefact (e.g. install it locally, run a smoke test) before pushing it to the repository, or when you want to publish the same artefact to multiple repositories without rebuilding.
+- **`build` then `publish`** — useful when you want to inspect the artefact (install it locally, run a smoke test) before pushing to the repository, or publish the same artefact to multiple repositories without rebuilding.

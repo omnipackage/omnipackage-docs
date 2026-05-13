@@ -1,6 +1,6 @@
 # `omnipackage info`
 
-Query project metadata without building anything. Useful in CI scripts — the JSON form of `--list-distros` is what powers the GitHub Actions matrix in the [CI/CD guide](../guides/cicd.md).
+Query project metadata without building anything. Useful in CI scripts — the JSON form of `--list-distros` powers the GitHub Actions matrix in the [CI/CD guide](../guides/cicd.md).
 
 ```
 omnipackage info [project-dir] [flags]

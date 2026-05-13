@@ -2,7 +2,7 @@
 
 End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM repository.
 
-If you don't already have a preference, **Cloudflare R2 is recommended** — it's the most-tested provider in this project, charges nothing for egress (so serving packages to users is free), and includes 10 GB of free storage.
+If you don't already have a preference, **Cloudflare R2 is recommended** — it's the most-tested provider in this project, charges nothing for egress (so serving packages is free), and includes 10 GB of free storage.
 
 ## AWS S3
 
@@ -67,7 +67,7 @@ Leave the two ACL boxes checked — modern buckets use policies, not ACLs.
 }
 ```
 
-The `Resource` ARN ends in `/*` (objects), not the bare bucket. Once both are in place, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
+The `Resource` ARN ends in `/*` (objects), not the bare bucket. Once both gates are in place, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
 
 ### 4. Repository config
 
@@ -89,7 +89,7 @@ The `Resource` ARN ends in `/*` (objects), not the bare bucket. Once both are in
 
 Field notes:
 
-- `bucket_public_url` — virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`). Gives HTTPS once the bucket policy is in place. Don't use the `s3-website` endpoint (HTTP-only).
+- `bucket_public_url` — virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`). Serves HTTPS once the bucket policy is in place. Don't use the `s3-website` endpoint (HTTP-only).
 - `endpoint` — regional S3 API endpoint, e.g. `https://s3.eu-central-1.amazonaws.com`.
 - `region` — actual AWS region. AWS requires it for SigV4 (R2 uses `auto`; AWS does not).
 - `force_path_style: false` — AWS uses virtual-hosted-style; path-style is deprecated.
@@ -154,7 +154,7 @@ Field notes:
 
 Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. Without purging, stale repo metadata (`Release`, `Packages.gz`, `repodata/`) can be served until TTL expires.
 
-If both `cloudflare_zone_id` and `cloudflare_api_token` are set, omnipackage purges the affected URL prefix after each upload. They're treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but doesn't fail the publish.
+If both `cloudflare_zone_id` and `cloudflare_api_token` are set, OmniPackage purges the affected URL prefix after each upload. They're treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but doesn't fail the publish.
 
 To get them:
 
@@ -214,6 +214,6 @@ Field notes:
 
 ### 5. Cache and custom domains
 
-GCS serves public objects with `Cache-Control: public, max-age=3600` by default, so republished repo metadata can be stale for up to an hour. Override the bucket-default Cache-Control or set per-object headers if that matters.
+GCS serves public objects with `Cache-Control: public, max-age=3600` by default, so republished repo metadata can be stale for up to an hour. Override the bucket-default `Cache-Control` or set per-object headers if that matters.
 
-GCS can't serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer + backend bucket in front, or front it with Cloudflare — in the Cloudflare case the `cloudflare_zone_id` / `cloudflare_api_token` fields become useful for cache purges, the same as the R2 setup.
+GCS can't serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer + backend bucket in front, or front it with Cloudflare — in the Cloudflare case the `cloudflare_zone_id` / `cloudflare_api_token` fields are useful for cache purges, same as the R2 setup.

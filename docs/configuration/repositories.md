@@ -1,6 +1,6 @@
 # `repositories`
 
-Each entry describes one publishing target. The `publish` and `release` commands pick one by name with `--repository <name>`; if omitted, the first entry is used.
+Each entry describes one publishing target. `publish` and `release` select one with `--repository <name>`; if omitted, the first entry is used.
 
 ## Common keys
 
@@ -25,7 +25,7 @@ Writes the repository tree to a host directory. Useful for testing.
 
 ## Provider: `s3`
 
-Uploads to an S3 bucket (any S3-compatible storage).
+Uploads to an S3 bucket or any S3-compatible storage.
 
 | Key | Required | Description |
 |-----|----------|-------------|
@@ -40,6 +40,6 @@ Uploads to an S3 bucket (any S3-compatible storage).
 | `cloudflare_zone_id` | no | If set, purge this CF zone after upload |
 | `cloudflare_api_token` | no | Token used for the CF purge |
 
-See the [Publishing to S3](../guides/s3_repository.md) guide for an end-to-end walkthrough.
+See [Publishing to S3](../guides/s3_repository.md) for an end-to-end walkthrough.
 
 <!-- TODO: -->

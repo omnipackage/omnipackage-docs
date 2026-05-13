@@ -19,7 +19,7 @@ omnipackage prime [project-dir] [flags]
 | `--build-dir <path>` | `$TMPDIR/omnipackage-build` | Where the per-distro temporary directories live |
 | `--fail-fast` | off | Stop on the first failing distro |
 | `--image-cache <name>` | first entry in `image_caches:` | Which image cache to populate |
-| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the prime process running inside the container is **printed to the terminal**. `null` means nothing is printed. omnipackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
+| `--container-output <stderr|stdout|null>` | `stderr` | Where output from the prime process running inside the container is **printed to the terminal**. `null` means nothing is printed. OmniPackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
 | `--disable-container-echo` | off | Disable `set -x` inside the container (less noisy output) |
 | `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise |
 
@@ -32,9 +32,9 @@ omnipackage prime [project-dir] [flags]
 
 ## When to re-prime
 
-Re-prime when any of the inputs to `setup` change, since the cached image won't reflect them otherwise:
+Re-prime when any input to `setup` changes, since the cached image won't reflect it:
 
-- The distro's published base image gets security updates (most common reason for the monthly cron in the [CI/CD guide](../guides/cicd.md#image-cache-priming)).
+- The distro's published base image gets security updates (the most common reason for the monthly cron in the [CI/CD guide](../guides/cicd.md#image-cache-priming)).
 - `build_dependencies` change in `config.yml`.
 - A `before_build_script` changes.
 - The toolchain installed by `setup` moves (e.g. a newer Rust via `install_rust.sh`).

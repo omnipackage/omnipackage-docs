@@ -2,11 +2,11 @@
 
 OmniPackage renders the RPM `.spec` file and the DEB `debian/` control files from [Liquid](https://shopify.github.io/liquid/) templates. This page covers what's available in the template context and how to thread per-distro values into a single shared template.
 
-## Why template at all
+## Why template
 
-A working `.spec` file or `debian/control` is mostly boilerplate that's identical across the distros in a family — same `%build` recipe, same `Source0`, same `Description`. The parts that genuinely differ between distros are small: package dependency names (`qt6-base-common-devel` on openSUSE vs. `qt6-qtbase-devel` on Fedora), optional CMake flags (Qt5 vs. Qt6 builds), occasional tool overrides (a different compiler on an older distro).
+A working `.spec` file or `debian/control` is mostly boilerplate identical across distros in a family — same `%build` recipe, same `Source0`, same `Description`. The parts that genuinely differ are small: package dependency names (`qt6-base-common-devel` on openSUSE vs. `qt6-qtbase-devel` on Fedora), optional CMake flags (Qt5 vs. Qt6), occasional tool overrides (a different compiler on an older distro).
 
-Without templating, you'd carry a copy of the spec for every distro and drift between them quickly. With templating, you write one `.spec.liquid` and one `debian/` directory; everything that varies — names, version, maintainer, deps, custom flags — comes from `config.yml` per distro.
+Without templating, you'd carry a copy of the spec for every distro and drift between them. With templating, one `.spec.liquid` and one `debian/` directory; everything that varies — names, version, maintainer, deps, custom flags — comes from `config.yml` per distro.
 
 ## Where templates live
 
@@ -21,9 +21,9 @@ deb:
 ```
 
 - **RPM**: a single file ending in `.liquid`. The rendered output goes into the rpmbuild tree as the spec file.
-- **DEB**: a directory. Every file inside ending in `.liquid` is rendered (the `.liquid` suffix is stripped on output: `control.liquid` → `control`). Files without `.liquid` are copied verbatim — useful for `compat`, license files, scripts, etc.
+- **DEB**: a directory. Every file inside ending in `.liquid` is rendered (the `.liquid` suffix is stripped: `control.liquid` → `control`). Files without `.liquid` are copied verbatim — useful for `compat`, license files, scripts, etc.
 
-The DEB tree typically contains `control.liquid`, `changelog.liquid`, `rules.liquid`, and `compat.liquid`. See the [`c_makefile` example]({{ examples_github_url }}/tree/master/c_makefile/.omnipackage/deb) for a complete minimal set.
+A typical DEB tree contains `control.liquid`, `changelog.liquid`, `rules.liquid`, and `compat.liquid`. See the [`c_makefile` example]({{ examples_github_url }}/tree/master/c_makefile/.omnipackage/deb) for a complete minimal set.
 
 {% raw %}
 
@@ -55,9 +55,9 @@ Requires: {{ runtime_dependencies | join: ', ' }}
 
 ## Custom per-distro variables
 
-Any field you add to a build entry in `config.yml` beyond the known keys above is passed straight into the template context with the same name. This is the mechanism for per-distro variation.
+Any field on a build entry in `config.yml` beyond the known keys above is passed straight into the template context with the same name. This is the mechanism for per-distro variation.
 
-Example from [`mpz`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) — same Qt-based project compiled against either Qt5 or Qt6 depending on the distro:
+Example from [`mpz`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) — same Qt-based project compiled against Qt5 or Qt6 depending on the distro:
 
 ```yaml
 debian_qt5: &debian_qt5
@@ -84,7 +84,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr {{ CMAKE_EXTRA_CLI 
 
 For Qt5 distros this expands to `... -DUSE_QT5=ON ..`; for Qt6 distros it expands to `...  ..` (the extra space is harmless to `cmake`). One template, two distro flavors, no fork.
 
-Custom values can be strings, integers, floats, or booleans — whatever YAML produces. They are addressed by the same key you used in YAML.
+Custom values can be strings, integers, floats, or booleans — whatever YAML produces. They are addressed by the same key used in YAML.
 
 ## Liquid basics
 
@@ -109,6 +109,6 @@ Requires: {{ runtime_dependencies | join: ', ' }}
 
 Referencing a variable that wasn't set anywhere does **not** error — it renders as an empty string (and evaluates as falsy in `{% if %}`). This is deliberate, so a custom variable like `CMAKE_EXTRA_CLI` can be set on some distros and omitted on others without conditional guards in the template.
 
-It also means typos render silently. If a value isn't appearing where you expect, double-check the spelling in both `config.yml` and the template.
+The flip side: typos render silently. If a value isn't appearing where you expect, double-check the spelling in both `config.yml` and the template.
 
 {% endraw %}
