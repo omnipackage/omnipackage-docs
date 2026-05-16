@@ -1,3 +1,7 @@
+---
+description: Recommended conventions for OmniPackage-built RPM and DEB packages — versioning, dependencies, signing, and repository layout.
+---
+
 # Best practices
 
 Conventions that make OmniPackage-built packages behave well on the distros they target. None are enforced by the tool — they're guidance from real-world packaging.

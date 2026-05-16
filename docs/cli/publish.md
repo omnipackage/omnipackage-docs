@@ -1,3 +1,7 @@
+---
+description: "`omnipackage publish` reference — upload already-built RPM and DEB packages to a configured repository."
+---
+
 # `omnipackage publish`
 
 Upload already-built packages to a [repository](../configuration/repositories.md). Assumes [`omnipackage build`](build.md) ran first **with the same `--build-dir`** — `publish` reads the built `.rpm` / `.deb` artefacts from there and won't find them if the prior build wrote elsewhere. Use [`omnipackage release`](release.md) to do build + publish in one shot without tracking the build dir.

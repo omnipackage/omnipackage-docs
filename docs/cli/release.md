@@ -1,3 +1,7 @@
+---
+description: "`omnipackage release` reference — build and publish RPM/DEB packages in one pass, the most common command in CI."
+---
+
 # `omnipackage release`
 
 Build and publish in one pass per distro. The most common command in CI — most users only run `release`, not the separate `build` / `publish` pair.

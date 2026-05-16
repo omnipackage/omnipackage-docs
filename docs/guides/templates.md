@@ -1,3 +1,7 @@
+---
+description: Liquid templates for the RPM `.spec` file and DEB `debian/` control files — available context, per-distro values, and shared snippets.
+---
+
 # Templates
 
 OmniPackage renders the RPM `.spec` file and the DEB `debian/` control files from [Liquid](https://shopify.github.io/liquid/) templates. This page covers what's available in the template context and how to thread per-distro values into a single shared template.

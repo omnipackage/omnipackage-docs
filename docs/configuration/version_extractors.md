@@ -1,3 +1,7 @@
+---
+description: "`version_extractors` reference — strategies that produce the version string stamped into each built RPM/DEB package."
+---
+
 # `version_extractors`
 
 A version extractor produces the version string stamped into the built package. At least one is required. `release` and `build` select one with `--version-extractor <name>`.

@@ -1,3 +1,7 @@
+---
+description: "`omnipackage prime` reference — pre-populate the image cache by running each distro's `setup` stage and snapshotting the result."
+---
+
 # `omnipackage prime`
 
 Pre-populate the container [image cache](../configuration/image_caches.md) by running each distro's `setup` stage and snapshotting the result. Later `build` / `release` runs start from the cached image and skip `setup` (the slow `apt-get install build-essential ...` / `dnf install rpmdevtools ...` step).

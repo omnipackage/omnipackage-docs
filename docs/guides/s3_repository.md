@@ -1,3 +1,7 @@
+---
+description: Turn an S3-compatible bucket (Cloudflare R2, AWS S3, MinIO) into a public DEB and RPM repository served over HTTPS.
+---
+
 # Publishing to S3
 
 End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM repository.

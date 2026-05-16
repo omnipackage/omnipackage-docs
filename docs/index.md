@@ -1,8 +1,32 @@
+---
+description: OmniPackage documentation — install, configure, and ship signed RPM and DEB packages from one YAML config. Guides, configuration reference, and full CLI docs.
+---
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "OmniPackage",
+  "url": "https://omnipackage.org",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Linux",
+  "description": "CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config.",
+  "codeRepository": "https://github.com/omnipackage/omnipackage-rs",
+  "documentation": "https://docs.omnipackage.org/",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+
 # OmniPackage documentation
 
-Build and distribute signed RPM and DEB packages from your own repository.
+Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config. For the project's overview and the "why", see [omnipackage.org](https://omnipackage.org/).
 
-OmniPackage is a CLI that drives the standard Linux packaging tools (`rpmbuild`, `debuild`, `createrepo_c`, `dpkg-scanpackages`, `gpg`, `podman`/`docker`) from a single config file, so one project repo can ship to many distros. Developers get one config and one `release` command; users get a generated install page with the usual four-line `apt` / `dnf` / `zypper` snippet. Updates flow through the distro's normal upgrade tools — no separate updater, no extra channel. See [About](https://omnipackage.org/about) for the longer motivation.
+## Where to start
+
+- [Getting started](getting_started.md) — install the CLI and ship the bundled C example end-to-end.
+- [How it works](guides/how_it_works.md) — what `omnipackage release` actually does under the hood.
+- [Configuration](configuration/index.md) — every key in `.omnipackage/config.yml`.
+- [CLI reference](cli/index.md) — every subcommand and flag.
 
 ## 30-second example
 

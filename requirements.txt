@@ -5,3 +5,4 @@ mkdocs-git-revision-date-localized-plugin
 Pygments
 pymdown-extensions>=10.11
 mkdocs-macros-plugin
+mkdocs-llmstxt
