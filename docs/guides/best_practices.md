@@ -70,6 +70,6 @@ So: use `before_build_script` freely for a modern toolchain. Don't use it to pap
 
 A question worth answering up-front when shipping a third-party repository: "why should a user trust me as the package provider?"
 
-The honest answer is that the trust decision isn't about the distribution channel. Users trust *you* — the developer — or they don't. If they trust you, they'll `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your OmniPackage repo. If they don't, none of those work either — the channel doesn't supply trust that wasn't already there.
+The honest answer is that the trust decision isn't about the distribution channel. Users trust *you* — the developer — or they don't. If they trust you, they'll `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your repo. If they don't, none of those work either — the channel doesn't supply trust that wasn't already there.
 
 OmniPackage doesn't move the needle in either direction. It's open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only provides shims that drive the standard Linux packaging tools — `rpmbuild`, `debuild`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.
