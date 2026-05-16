@@ -4,7 +4,7 @@ description: "`omnipackage prime` reference — pre-populate the image cache by 
 
 # `omnipackage prime`
 
-Pre-populate the container [image cache](../configuration/image_caches.md) by running each distro's `setup` stage and snapshotting the result. Later `build` / `release` runs start from the cached image and skip `setup` (the slow `apt-get install build-essential ...` / `dnf install rpmdevtools ...` step).
+Pre-populate the container [image cache](../configuration/image_caches.md) by running each distro's `setup` stage and snapshotting the result. Subsequent `build` / `release` runs start from the cached image and skip `setup` (the slow `apt-get install build-essential ...` / `dnf install rpmdevtools ...` step).
 
 ```
 omnipackage prime [project-dir] [flags]
@@ -32,15 +32,15 @@ omnipackage prime [project-dir] [flags]
 1. Pulls the distro base image.
 2. Runs the distro's `setup` and `setup_repo` commands inside a container, including any `before_build_script` from the build entry.
 3. Commits the resulting container as an image tagged `<image_tag>:<distro_id>`.
-4. For `provider: registry`, logs into the registry and pushes the image. For `provider: local`, leaves it in the container runtime's local store only.
+4. For `provider: registry`, logs in and pushes the image. For `provider: local`, leaves it in the container runtime's local store only.
 
 ## When to re-prime
 
-Re-prime when any input to `setup` changes, since the cached image won't reflect it:
+Re-prime when any input to `setup` changes, since the cached image will no longer reflect it:
 
-- The distro's published base image gets security updates (the most common reason for the monthly cron in the [CI/CD guide](../guides/cicd.md#image-cache-priming)).
+- The distro's published base image receives security updates (the typical reason for the monthly cron in the [CI/CD guide](../guides/cicd.md#image-cache-priming)).
 - `build_dependencies` change in `config.yml`.
 - A `before_build_script` changes.
 - The toolchain installed by `setup` moves (e.g. a newer Rust via `install_rust.sh`).
 
-The first usually goes through the scheduled cron; the rest are typically triggered manually via `workflow_dispatch` after the relevant change lands.
+The first usually runs through the scheduled cron; the rest are triggered manually via `workflow_dispatch` after the relevant change lands.

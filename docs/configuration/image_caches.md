@@ -4,7 +4,7 @@ description: "`image_caches` reference — pre-built container images that skip 
 
 # `image_caches`
 
-Each build target pulls a container image. Image caches let you push prepared images (the distro base plus everything `setup` installs) to a registry — or store them locally — so subsequent builds start from the snapshot and skip `setup`.
+Each build target pulls a container image. Image caches let you push prepared images (the distro base plus everything `setup` installs) to a registry — or store them locally — so subsequent builds start from the snapshot and skip `setup` entirely.
 
 The cache is populated by [`prime`](../cli/prime.md) and consumed by `build` / `publish` / `release` via `--image-cache <name>`. If the named cache is configured but not yet primed, the container runtime fails to pull it — run `prime` first.
 
@@ -41,18 +41,18 @@ image_caches:
 
 ## GitHub Container Registry (ghcr.io)
 
-GHCR is the most common CI target — free and tightly integrated with GitHub Actions — but also the most common source of credential confusion. Two cases:
+GHCR is the most common CI target — free and tightly integrated with GitHub Actions — and also the most common source of credential confusion. Two cases:
 
 ### From GitHub Actions: `GITHUB_TOKEN`
 
-Inside a workflow, the auto-injected `GITHUB_TOKEN` can push and pull from GHCR — no PAT needed. The job must declare write access:
+Inside a workflow, the auto-injected `GITHUB_TOKEN` can push and pull from GHCR — no PAT required. The job must declare write access:
 
 ```yaml
 permissions:
   packages: write
 ```
 
-(The default for modern repos is read-only — enough to pull but not push; `prime` fails without `write`.) In the workflow step, pass the values into `.env` so they reach `${...}` substitution in `config.yml`:
+(The default for modern repos is read-only — enough to pull but not push; `prime` fails without `write`.) In the workflow step, pass the values into `.env` so `${...}` substitution in `config.yml` can read them:
 
 {% raw %}
 ```yaml
@@ -67,7 +67,7 @@ permissions:
 
 ### Outside Actions (local dev, other CI): Personal Access Token
 
-`GITHUB_TOKEN` only exists inside a GitHub Actions runner. To `prime` from your laptop or other CI, use a **classic Personal Access Token** with `write:packages` and `read:packages` scopes (fine-grained tokens don't currently cover GHCR — use classic). Create it at GitHub → Settings → Developer settings → Personal access tokens → **Tokens (classic)**, then paste it into your local `.env`:
+`GITHUB_TOKEN` only exists inside a GitHub Actions runner. To `prime` from your laptop or other CI, use a **classic Personal Access Token** with `write:packages` and `read:packages` scopes (fine-grained tokens do not currently cover GHCR — use classic). Create it at GitHub → Settings → Developer settings → Personal access tokens → **Tokens (classic)**, then paste it into your local `.env`:
 
 ```sh
 GITHUB_REGISTRY_USERNAME=your-github-username

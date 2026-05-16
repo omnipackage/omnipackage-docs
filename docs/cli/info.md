@@ -4,7 +4,7 @@ description: "`omnipackage info` reference — query project metadata without bu
 
 # `omnipackage info`
 
-Query project metadata without building anything. Useful in CI scripts — the JSON form of `--list-distros` powers the GitHub Actions matrix in the [CI/CD guide](../guides/cicd.md).
+Query project metadata without running a build. Useful in CI scripts — the JSON form of `--list-distros` drives the GitHub Actions matrix in the [CI/CD guide](../guides/cicd.md).
 
 ```
 omnipackage info [project-dir] [flags]

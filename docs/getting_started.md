@@ -4,7 +4,7 @@ description: Install OmniPackage and build the bundled C example end-to-end — 
 
 # Getting started
 
-This page installs the CLI and builds the bundled C example end-to-end.
+Install the CLI and build the bundled C example end-to-end.
 
 ## Install the CLI
 
@@ -19,7 +19,7 @@ Verify:
 omnipackage --version
 ```
 
-You should see something like `omnipackage 0.1.4`.
+Expected output: `omnipackage 0.1.4` or similar.
 
 ## Build the example project
 
@@ -29,7 +29,7 @@ Clone the [examples repo](https://github.com/omnipackage/examples) and enter the
 git clone https://github.com/omnipackage/examples.git && cd examples/c_makefile
 ```
 
-Generate a GPG signing key. You can also reuse an existing key — see [Signing packages](guides/signing.md).
+Generate a GPG signing key. To reuse an existing one, see [Signing packages](guides/signing.md).
 
 ```
 echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email 'you@example.com' --format base64)" >> .env
@@ -47,13 +47,13 @@ omnipackage release .
 
 The build log streams for each distro in `.omnipackage/config.yml`.
 
-The command creates local repositories at `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
+The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
 
 ## Next steps
 
 ### Switch to S3 for production
 
-Local repositories are fine for testing; production usually means S3. The example config already includes an S3 block. Select it by name:
+Local repositories suit testing; production usually means S3. The example config already includes an S3 block. Select it by name:
 
 ```
 omnipackage release . --repository "Example bucket"
@@ -61,4 +61,4 @@ omnipackage release . --repository "Example bucket"
 
 ### How secrets flow
 
-Secrets must be declared in `config.yml` and passed from env via `${...}`. `config.yml` is the single source of truth; `.env` (or any other env file, or the process environment) holds the values. There are no hidden env settings beyond what's declared in config.
+Secrets are declared in `config.yml` and passed from the environment via `${...}`. `config.yml` is the single source of truth; `.env` (or any other env file, or the process environment) holds the values. No hidden env settings exist beyond what `config.yml` declares.

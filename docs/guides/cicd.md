@@ -8,7 +8,7 @@ Running `omnipackage release` from CI so every push, tag, or other trigger produ
 
 ## GitHub Actions
 
-A suggested setup, lifted from [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire triggers, secrets, and job topology differently; the shape below is a good starting point. The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
+A suggested setup, adapted from [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire triggers, secrets, and job topology differently; the shape below is a reasonable starting point. The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
 
 | File | Trigger | Purpose |
 |------|---------|---------|
@@ -19,7 +19,7 @@ A suggested setup, lifted from [`mpz`](https://github.com/olegantonyan/mpz). Oth
 
 When-to-release lives in the trigger wrappers; how-to-release lives in the shared workflow. The two channels differ only in which `repositories:` entry they publish to and which `version_extractor` they use.
 
-The split is optional — a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you don't need and call the pipeline directly.
+The split is optional — a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you do not need and call the pipeline directly.
 
 ### The shared workflow
 
@@ -80,7 +80,7 @@ Field notes:
 
 - `list-distros` emits a JSON array of distro IDs that `fromJson()` expands into the `release` matrix. Adding a build target to `config.yml` widens the matrix automatically.
 - `concurrency.group` keyed on `(repository, distro)` with `cancel-in-progress: false` queues same-channel runs instead of racing — concurrent writers corrupt repo metadata (`Release`, `Packages.gz`, `repodata/`).
-- `fail-fast: false` lets one distro's failure leave the others' packages published.
+- `fail-fast: false` lets one distro's failure leave the other distros' packages published.
 - `--image-cache github` references the `image_caches:` entry below.
 
 ### Stable vs next triggers
@@ -106,7 +106,7 @@ jobs:
       version_extractor: "git"
 ```
 
-`version_extractor: "git"` derives a unique, monotonic version from the commit. Swap `push:` for `workflow_run:` to only publish from green CI commits.
+`version_extractor: "git"` derives a unique, monotonic version from the commit. Swap `push:` for `workflow_run:` to publish only from green CI commits.
 
 **Stable** — `omnipackage-stable.yml`. Only when a GitHub release is published:
 
@@ -127,9 +127,9 @@ jobs:
       version_extractor: "stable"
 ```
 
-Drafts and pre-releases don't trigger. `version_extractor: "stable"` reads the version from the GitHub release tag — see [version_extractors](../configuration/version_extractors.md) for alternatives. Both wrappers also accept `workflow_dispatch` for re-runs without retagging.
+Drafts and pre-releases do not trigger. `version_extractor: "stable"` reads the version from the GitHub release tag — see [version_extractors](../configuration/version_extractors.md) for alternatives. Both wrappers also accept `workflow_dispatch` for re-runs without retagging.
 
-`secrets: inherit` is required — without it, `OMNIPACKAGE_DOTENV` is invisible to the called workflow.
+`secrets: inherit` is required — without it, `OMNIPACKAGE_DOTENV` is not visible to the called workflow.
 
 ### Image cache priming
 
@@ -167,9 +167,9 @@ jobs:
 ```
 {% endraw %}
 
-- `permissions: packages: write` lets `GITHUB_TOKEN` push images to GHCR (default is read-only).
+- `permissions: packages: write` lets `GITHUB_TOKEN` push images to GHCR (the default is read-only).
 - `cron: '44 6 1 * *'` runs 06:44 UTC on the 1st of each month — off-the-hour minutes avoid scheduler throttling.
-- Re-prime when distro base images get security updates, the `setup` script changes, or the toolchain in `setup` moves. The monthly cron catches the first; trigger manually for the others.
+- Re-prime when distro base images receive security updates, the `setup` script changes, or the toolchain in `setup` moves. The monthly cron catches the first; trigger manually for the others.
 
 The matching `image_caches:` entry:
 
@@ -191,4 +191,4 @@ The three `GITHUB_REGISTRY_*` env vars come from the `.env` blob.
 
 `OMNIPACKAGE_DOTENV` is a convenience: paste the entire local `.env` into one multi-line GitHub Actions secret, write it back verbatim in CI, and rotate in one place. The plain pattern (one secret per env var, exposed via `env:` on the step) works equally well; the two can be mixed.
 
-`.env` lives in `$GITHUB_WORKSPACE`, gets discarded with the runner, isn't uploaded as an artifact, and isn't visible to the build container unless `config.yml` explicitly maps it.
+`.env` lives in `$GITHUB_WORKSPACE`, is discarded with the runner, is not uploaded as an artifact, and is not visible to the build container unless `config.yml` explicitly maps it.

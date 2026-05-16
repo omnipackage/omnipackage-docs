@@ -19,12 +19,12 @@ description: OmniPackage documentation — install, configure, and ship signed R
 
 # OmniPackage documentation
 
-Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config. For the project's overview and the "why", see [omnipackage.org](https://omnipackage.org/).
+Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config. For the project overview and the "why", see [omnipackage.org](https://omnipackage.org/).
 
 ## Where to start
 
 - [Getting started](getting_started.md) — install the CLI and ship the bundled C example end-to-end.
-- [How it works](guides/how_it_works.md) — what `omnipackage release` actually does under the hood.
+- [How it works](guides/how_it_works.md) — what `omnipackage release` does, step by step.
 - [Configuration](configuration/index.md) — every key in `.omnipackage/config.yml`.
 - [CLI reference](cli/index.md) — every subcommand and flag.
 
@@ -41,8 +41,8 @@ Full walkthrough: [Getting started](getting_started.md).
 
 ## Real-world projects
 
-- [`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — Qt-based desktop music player. 31 build targets, Qt5/Qt6 split via YAML anchors, per-distro CMake flags, R2 with Cloudflare cache purges.
-- [`omnipackage/omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) — OmniPackage built with itself. `before_build_script` to install a current Rust toolchain on older distros, distro-packaged Rust on newer ones, dual GHCR caches for org and contributor-fork workflows.
+- [`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — Qt desktop music player. 31 build targets, Qt5/Qt6 split via YAML anchors, per-distro CMake flags, R2 with Cloudflare cache purges.
+- [`omnipackage/omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) — OmniPackage built with itself. `before_build_script` installs a current Rust toolchain on older distros; newer ones use distro-packaged Rust. Dual GHCR caches cover org and contributor-fork workflows.
 - [`omnipackage/examples`](https://github.com/omnipackage/examples) — minimal one-per-language templates (C, C++, CMake, Rust, Go, Python, Ruby, Crystal, Electron, Tauri).
 
 See [Examples](examples.md) for details.

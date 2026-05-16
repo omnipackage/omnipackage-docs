@@ -8,9 +8,9 @@ OmniPackage renders the RPM `.spec` file and the DEB `debian/` control files fro
 
 ## Why template
 
-A working `.spec` file or `debian/control` is mostly boilerplate identical across distros in a family — same `%build` recipe, same `Source0`, same `Description`. The parts that genuinely differ are small: package dependency names (`qt6-base-common-devel` on openSUSE vs. `qt6-qtbase-devel` on Fedora), optional CMake flags (Qt5 vs. Qt6), occasional tool overrides (a different compiler on an older distro).
+A working `.spec` file or `debian/control` is mostly boilerplate identical across distros in a family — same `%build` recipe, same `Source0`, same `Description`. The parts that differ are small: package dependency names (`qt6-base-common-devel` on openSUSE vs. `qt6-qtbase-devel` on Fedora), optional CMake flags (Qt5 vs. Qt6), occasional tool overrides (a different compiler on an older distro).
 
-Without templating, you'd carry a copy of the spec for every distro and drift between them. With templating, one `.spec.liquid` and one `debian/` directory; everything that varies — names, version, maintainer, deps, custom flags — comes from `config.yml` per distro.
+Without templating, you would carry a copy of the spec for every distro and watch them drift. With templating, one `.spec.liquid` and one `debian/` directory; everything that varies — names, version, maintainer, deps, custom flags — comes from `config.yml` per distro.
 
 ## Where templates live
 
@@ -111,8 +111,8 @@ Requires: {{ runtime_dependencies | join: ', ' }}
 
 ## Undefined variables render as empty
 
-Referencing a variable that wasn't set anywhere does **not** error — it renders as an empty string (and evaluates as falsy in `{% if %}`). This is deliberate, so a custom variable like `CMAKE_EXTRA_CLI` can be set on some distros and omitted on others without conditional guards in the template.
+Referencing a variable that was not set anywhere does **not** error — it renders as an empty string (and evaluates as falsy in `{% if %}`). This is deliberate, so a custom variable like `CMAKE_EXTRA_CLI` can be set on some distros and omitted on others without conditional guards in the template.
 
-The flip side: typos render silently. If a value isn't appearing where you expect, double-check the spelling in both `config.yml` and the template.
+The flip side: typos render silently. If a value is not appearing where you expect, double-check the spelling in both `config.yml` and the template.
 
 {% endraw %}

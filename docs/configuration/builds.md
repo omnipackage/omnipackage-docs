@@ -4,7 +4,7 @@ description: "`builds` reference — per-target entries that define one RPM or D
 
 # `builds`
 
-Each entry in `builds:` defines one package build for one target distro. A project shipping to Debian 12 and Fedora 40 has two `builds` entries — almost always deduplicated with YAML anchors so shared fields live in one place.
+Each entry in `builds:` defines one package build for one target distro. A project shipping to Debian 12 and Fedora 40 has two `builds` entries — typically deduplicated with YAML anchors so shared fields live in one place.
 
 ## Keys per build entry
 
@@ -22,25 +22,25 @@ Each entry in `builds:` defines one package build for one target distro. A proje
 | `deb.debian_templates` | DEB only | Path (relative to source dir) to a directory of `debian/*.liquid` files. Required for DEB-format distros |
 | *(custom fields)* | no | Arbitrary scalar values (string, bool, int, float — not arrays or objects) passed straight into the template context. See [Templates](../guides/templates.md#custom-per-distro-variables) |
 
-`rpm:` and `deb:` blocks aren't a per-build override of a default — only the block matching the distro's package format is consulted, so each build entry needs the one for its format. Both are usually defined once via a YAML anchor (see below) rather than repeated.
+`rpm:` and `deb:` blocks are not a per-build override of a default — only the block matching the distro's package format is consulted, so each build entry needs the one for its format. Both are usually defined once via a YAML anchor (see below) rather than repeated.
 
-Unknown top-level keys in `config.yml` are silently ignored, which is what makes the anchor pattern below work cleanly.
+Unknown top-level keys in `config.yml` are silently ignored, which is what lets the anchor pattern below work cleanly.
 
-### When `runtime_dependencies` is actually needed
+### When `runtime_dependencies` is needed
 
 Rarely, for most projects. `rpmbuild` and `dpkg-shlibdeps` scan the built binaries' linked libraries during the package build and add the providing distro packages as dependencies automatically — the resulting package already declares everything it dynamically links against.
 
 Cases where explicit entries do matter:
 
-- **`dlopen`-loaded libraries** — not present in `DT_NEEDED`, so the build-time scanner can't see them. Anything loaded by name at runtime (plugins, optional codecs, GPU backends) must be listed.
+- **`dlopen`-loaded libraries** — not present in `DT_NEEDED`, so the build-time scanner cannot see them. Anything loaded by name at runtime (plugins, optional codecs, GPU backends) must be listed.
 - **Non-library runtime requirements** — external tools the package shells out to (`gpg`, `ffmpeg`, `podman`), data-only packages, fonts, themes.
 - **Choice between alternatives** — when more than one distro package can satisfy the same need (e.g. either `podman` or `docker`), declare the alternation explicitly. See syntax below.
 
 ### `runtime_dependencies` syntax
 
-Each entry is a plain distro package name like `gpg` or `libqt5multimedia5-plugins` — that's all most projects need. Strings pass through verbatim into the rendered spec / control file, so use the syntax the target distro's package format understands.
+Each entry is a plain distro package name like `gpg` or `libqt5multimedia5-plugins` — sufficient for most projects. Strings pass through verbatim into the rendered spec / control file, so use the syntax the target distro's package format understands.
 
-OR-alternative forms — DEB pipe-OR (`pkg | other-pkg`) and RPM rich-dep syntax (`(pkg or other-pkg)`) — are **only** needed when more than one distro package can genuinely satisfy the same need. If a single distro package provides what you want, write its name as a plain string.
+OR-alternative forms — DEB pipe-OR (`pkg | other-pkg`) and RPM rich-dep syntax (`(pkg or other-pkg)`) — are **only** needed when more than one distro package can satisfy the same need. If a single distro package provides what you want, write its name as a plain string.
 
 ```yaml
 # Typical case: plain package names
@@ -55,7 +55,7 @@ runtime_dependencies: ["(podman or docker)", gpg]           # RPM target
 
 Without anchors, shipping to ten distros means repeating the same `package_name`, `maintainer`, `homepage`, `description`, and template paths ten times. With anchors, each build entry shrinks to one or two lines.
 
-A typical layout has three layers: **common** (shared across every build), **per-format** (RPM vs DEB plus template paths), and **per-distro-family** (where dependency lists actually differ):
+A typical layout has three layers: **common** (shared across every build), **per-format** (RPM vs DEB plus template paths), and **per-distro-family** (where dependency lists diverge):
 
 ```yaml
 common: &common
@@ -100,10 +100,10 @@ Syntax notes:
 - `&name` defines an anchor; `*name` references it.
 - `<<:` is YAML's merge key — it copies every key from the referenced mapping into the current one. Keys defined explicitly on the entry override merged values.
 - Anchors chain transitively: `*debian_family` merges `*deb`, which merges `*common`, so each `builds` entry inherits everything up the chain.
-- The top-level keys `common:`, `rpm:`, `deb:`, `debian_family:`, `fedora_family:` aren't OmniPackage config — they're YAML scratch space hosting anchors. The parser only reads `version_extractors:`, `builds:`, `repositories:`, `image_caches:`, `secrets:`, `ignore_source_files:`.
-- Per-distro entries can still override anything — a different `build_dependencies` list for one distro, a `before_build_script` only on older distros, etc. Explicit keys win over merged ones.
+- The top-level keys `common:`, `rpm:`, `deb:`, `debian_family:`, `fedora_family:` are not OmniPackage config — they are YAML scratch space hosting anchors. The parser only reads `version_extractors:`, `builds:`, `repositories:`, `image_caches:`, `secrets:`, `ignore_source_files:`.
+- Per-distro entries can still override anything — a different `build_dependencies` list for one distro, a `before_build_script` only on older distros, and so on. Explicit keys win over merged ones.
 
-For a real two-format project at scale (Qt5 vs. Qt6 splits, per-distro CMake flags), see [`mpz/.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml). For `before_build_script` on older distros only, see [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml).
+For a two-format project at scale (Qt5 vs. Qt6 splits, per-distro CMake flags), see [`mpz/.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml). For `before_build_script` on older distros only, see [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml).
 
 ## Custom fields
 

@@ -4,7 +4,7 @@ description: "`omnipackage publish` reference — upload already-built RPM and D
 
 # `omnipackage publish`
 
-Upload already-built packages to a [repository](../configuration/repositories.md). Assumes [`omnipackage build`](build.md) ran first **with the same `--build-dir`** — `publish` reads the built `.rpm` / `.deb` artefacts from there and won't find them if the prior build wrote elsewhere. Use [`omnipackage release`](release.md) to do build + publish in one shot without tracking the build dir.
+Upload already-built packages to a [repository](../configuration/repositories.md). Assumes [`omnipackage build`](build.md) ran first **with the same `--build-dir`** — `publish` reads the built `.rpm` / `.deb` artefacts from there and will not find them if the prior build wrote elsewhere. Use [`omnipackage release`](release.md) for build + publish in one pass without tracking the build dir.
 
 ```
 omnipackage publish [project-dir] [flags]
@@ -33,7 +33,7 @@ omnipackage publish [project-dir] [flags]
 
 For each distro:
 
-1. Spins up a container with the distro-native repo-metadata tool (`createrepo_c` for RPM, `dpkg-scanpackages` for DEB).
-2. Adds the built artefact to the repo tree, signs the metadata with the GPG key from `repositories.gpg_private_key_base64`.
-3. Uploads the resulting tree to the configured backend (S3-compatible, or local fs).
+1. Starts a container with the distro-native repo-metadata tool (`createrepo_c` for RPM, `dpkg-scanpackages` for DEB).
+2. Adds the built artefact to the repo tree and signs the metadata with the GPG key from `repositories.gpg_private_key_base64`.
+3. Uploads the resulting tree to the configured backend (S3-compatible or local filesystem).
 4. Renders `install.html` with the four-line install snippet for that distro family and writes it next to the repo.

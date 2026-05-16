@@ -4,7 +4,7 @@ description: "`omnipackage portal` reference — open an interactive shell insid
 
 # `omnipackage portal`
 
-Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool for when a build fails and you want to poke around — try the same `dnf install ...` / `apt-get install ...` lines `setup` would run, see what error comes back, find the right package name, then update `config.yml`.
+Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool when a build fails and you need to investigate — run the same `dnf install ...` / `apt-get install ...` lines `setup` would run, inspect the error, find the right package name, then update `config.yml`.
 
 ```
 omnipackage portal <distro> [flags]
@@ -24,7 +24,7 @@ omnipackage portal <distro> [flags]
 - The plain distro base image (e.g. `fedora:42`, `debian:trixie`) — **not** the post-`setup` snapshot. `portal` is for diagnosing setup, not skipping it.
 - An interactive `bash` shell as root.
 - `--build-dir` mounted at `/<basename>` (so `/tmp/omnipackage-build` becomes `/omnipackage-build` inside).
-- `--rm` semantics — the container is discarded when you `exit`, no state persists between portal sessions.
+- `--rm` semantics — the container is discarded on `exit`; no state persists between portal sessions.
 
 Finding the right package name for a `build_dependencies` entry:
 

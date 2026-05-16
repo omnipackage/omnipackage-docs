@@ -29,7 +29,7 @@ If neither is set, `podman` is preferred when available, otherwise `docker`. The
 
 ## Common per-command flags
 
-Most commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a default — most invocations only need `<project-dir>` (and that defaults to the current directory).
+Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -43,7 +43,7 @@ Most commands that touch the project (`build`, `publish`, `release`, `prime`, `i
 
 ## Common logging flags
 
-`build`, `publish`, `release`, and `prime` share these. OmniPackage's own progress logs always go to stdout; the flags below control output from the process running **inside** the container. The full container log is always written to disk under `--build-dir`, regardless of these settings.
+`build`, `publish`, `release`, and `prime` share these. OmniPackage's own progress logs always go to stdout; the flags below control output from the process running **inside** the container. The full container log is always written to disk under `--build-dir` regardless of these settings.
 
 | Flag | Default | Description |
 |------|---------|-------------|

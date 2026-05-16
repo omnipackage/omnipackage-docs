@@ -8,7 +8,7 @@ Generate and convert GPG signing keys. See [Signing packages](../guides/signing.
 
 ## `gpg generate`
 
-Generate a new keypair and print the **private** key to stdout. The public key is derivable from it on demand, so OmniPackage doesn't need both.
+Generate a new keypair and print the **private** key to stdout. The public key is derivable from it on demand, so OmniPackage stores only one.
 
 ```
 omnipackage gpg generate --name <name> --email <email> [--format pem|base64]
@@ -23,7 +23,7 @@ omnipackage gpg generate --name <name> --email <email> [--format pem|base64]
 The generated key is RSA 4096-bit, no expiration, **no passphrase** (OmniPackage cannot use a passphrased key). Generation runs in an isolated `GNUPGHOME` — your real `~/.gnupg` is never touched.
 
 ```sh
-# Typical: stash directly into .env
+# Typical: write directly into .env
 echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email you@example.com --format base64)" >> .env
 ```
 

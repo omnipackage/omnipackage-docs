@@ -4,7 +4,7 @@ description: Sign RPM and DEB packages and repository metadata with GPG — key 
 
 # Signing packages
 
-OmniPackage signs every published `.deb` / `.rpm` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM) with a GPG private key. End users import the matching public key once when they add the repository; `apt` / `dnf` / `zypper` reject any package or metadata file whose signature doesn't verify. The key is what makes a published repository trustable.
+OmniPackage signs every published `.deb` / `.rpm` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM) with a GPG private key. End users import the matching public key once when they add the repository; `apt` / `dnf` / `zypper` reject any package or metadata file whose signature does not verify. The key is what makes a published repository trustable.
 
 The key is referenced from `config.yml` as base64-wrapped ASCII armor, normally via `${GPG_KEY}` — substituted from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment.
 
@@ -20,7 +20,7 @@ The rest of this page covers producing that `GPG_KEY` value — generated fresh,
 
 !!! warning "Keep the key secret and back it up"
 
-    The private key is the trust anchor for your repository. Treat it like any other production secret — never commit it, restrict access, and keep at least one backup somewhere safe (password manager, encrypted offline storage). **If you lose it, you cannot sign updates with the same key.** Signing future releases with a *new* key causes every user's `apt` / `dnf` / `zypper` to reject the updates with a signature-mismatch error; they'll have to manually import the new public key (or remove and re-add the repository) before updates resume.
+    The private key is the trust anchor for your repository. Treat it like any other production secret — never commit it, restrict access, and keep at least one backup somewhere safe (password manager, encrypted offline storage). **If you lose it, you cannot sign updates with the same key.** Signing future releases with a *new* key causes every user's `apt` / `dnf` / `zypper` to reject the updates with a signature-mismatch error; they will have to manually import the new public key (or remove and re-add the repository) before updates resume.
 
 ## Generate a new key
 
@@ -37,8 +37,8 @@ echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email you@example.
 What the command does:
 
 - Generates an RSA 4096-bit keypair with no expiration date.
-- Does **not** set a passphrase — required, because the build runs unattended in CI and there's nothing to type one into.
-- Prints only the private key. The public key is derived from it on every publish, so you don't need to track them separately.
+- Does **not** set a passphrase — required, since the build runs unattended in CI with no interactive prompt.
+- Prints only the private key. The public key is derived from it on every publish, so you do not need to track them separately.
 - Runs in a temporary, isolated `GNUPGHOME`; your real `~/.gnupg` is never touched.
 
 The same key signs packages and repo metadata for the lifetime of the repository — rotating it forces every existing user to re-import the new public key, so generate once and keep the `.env` value safe.
@@ -66,7 +66,7 @@ gpg --edit-key <KEY_ID>
 > save
 ```
 
-To keep your everyday key passphrased, **don't** do this on it — instead generate a dedicated unprotected signing subkey, or generate a fresh key with `omnipackage gpg generate` (above) and use it exclusively for package signing.
+To keep your everyday key passphrased, **do not** do this on it — instead generate a dedicated unprotected signing subkey, or generate a fresh key with `omnipackage gpg generate` (above) and use it exclusively for package signing.
 
 ### 3. Export the private key as ASCII armor
 
@@ -83,14 +83,14 @@ echo "GPG_KEY=$(omnipackage gpg convert --input signing-key.asc --input-format p
 rm signing-key.asc
 ```
 
-Delete `signing-key.asc` once it's in `.env` — no reason to keep two copies of the secret on disk.
+Delete `signing-key.asc` once it is in `.env` — no reason to keep two copies of the secret on disk.
 
 ## Convert between formats
 
 `omnipackage gpg convert` round-trips between two key encodings:
 
-| Format | What it is | Where it's used |
-|--------|------------|-----------------|
+| Format | What it is | Where it is used |
+|--------|------------|------------------|
 | `pem` | Plain ASCII armor (`-----BEGIN PGP PRIVATE KEY BLOCK-----`...). Multi-line. | What `gpg --armor --export-secret-keys` produces; human-inspectable. |
 | `base64` | The PEM block, base64-encoded into one line of ASCII. | What `config.yml` expects in `gpg_private_key_base64`; what you put in `.env`. |
 

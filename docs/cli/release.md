@@ -12,11 +12,11 @@ omnipackage release [project-dir] [flags]
 
 `project-dir` defaults to `.`.
 
-`release` is not literally `build` followed by `publish`. For each distro it does build + repo metadata generation + signing in a single container invocation, then uploads, then renders the install page. That's why `release` doesn't depend on a prior `--build-dir` (whereas `publish` does).
+`release` is not literally `build` followed by `publish`. For each distro it performs build + repo metadata generation + signing in a single container invocation, then uploads, then renders the install page. That is why `release` does not depend on a prior `--build-dir` (whereas `publish` does).
 
 ## Flags
 
-The union of `build` and `publish` flags. Every flag has a default; the table shows what you get if you omit it.
+The union of `build` and `publish` flags. Every flag has a default; the table shows the value used if the flag is omitted.
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -36,5 +36,5 @@ The union of `build` and `publish` flags. Every flag has a default; the table sh
 
 ## `release` vs. separate `build` + `publish`
 
-- **`release`** — the default. Everything happens in the same container per distro, so it's also faster than the two-step pair.
-- **`build` then `publish`** — useful when you want to inspect the artefact (install it locally, run a smoke test) before pushing to the repository, or publish the same artefact to multiple repositories without rebuilding.
+- **`release`** — the default. Everything happens in the same container per distro, so it is also faster than the two-step pair.
+- **`build` then `publish`** — useful for inspecting the artefact (install it locally, run a smoke test) before pushing to the repository, or for publishing the same artefact to multiple repositories without rebuilding.

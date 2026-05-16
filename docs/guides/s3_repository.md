@@ -6,7 +6,7 @@ description: Turn an S3-compatible bucket (Cloudflare R2, AWS S3, MinIO) into a 
 
 End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM repository.
 
-If you don't already have a preference, **Cloudflare R2 is recommended** — it's the most-tested provider in this project, charges nothing for egress (so serving packages is free), and includes 10 GB of free storage.
+If you do not already have a preference, **Cloudflare R2 is recommended** — it is the most-tested provider in this project, charges nothing for egress (so serving packages is free), and includes 10 GB of free storage.
 
 ## AWS S3
 
@@ -16,7 +16,7 @@ S3 console → **Create bucket**. Pick a region (e.g. `eu-central-1`) and a glob
 
 ### 2. Create an IAM user with access keys
 
-Access keys come from **IAM**, not S3. Don't use the root account.
+Access keys come from **IAM**, not S3. Do not use the root account.
 
 1. IAM → **Users** → **Create user** (e.g. `omnipackage-publisher`). Programmatic access only, no console login.
 2. Attach an inline policy scoped to this single bucket:
@@ -41,7 +41,7 @@ Access keys come from **IAM**, not S3. Don't use the root account.
 
 3. **Security credentials** → **Create access key** → "Application running outside AWS". Copy both into your env file as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` — the secret is shown only once and cannot be retrieved later.
 
-From GitHub Actions, prefer OIDC + an IAM role over static keys.
+From GitHub Actions, prefer OIDC with an IAM role over static keys.
 
 ### 3. Make objects publicly readable
 
@@ -71,7 +71,7 @@ Leave the two ACL boxes checked — modern buckets use policies, not ACLs.
 }
 ```
 
-The `Resource` ARN ends in `/*` (objects), not the bare bucket. Once both gates are in place, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
+The `Resource` ARN ends in `/*` (objects), not the bare bucket. With both gates in place, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
 
 ### 4. Repository config
 
@@ -93,7 +93,7 @@ The `Resource` ARN ends in `/*` (objects), not the bare bucket. Once both gates 
 
 Field notes:
 
-- `bucket_public_url` — virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`). Serves HTTPS once the bucket policy is in place. Don't use the `s3-website` endpoint (HTTP-only).
+- `bucket_public_url` — virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`). Serves HTTPS once the bucket policy is in place. Do not use the `s3-website` endpoint (HTTP-only).
 - `endpoint` — regional S3 API endpoint, e.g. `https://s3.eu-central-1.amazonaws.com`.
 - `region` — actual AWS region. AWS requires it for SigV4 (R2 uses `auto`; AWS does not).
 - `force_path_style: false` — AWS uses virtual-hosted-style; path-style is deprecated.
@@ -116,11 +116,11 @@ Cloudflare dashboard → **R2** → **Create bucket**. R2 names are scoped to yo
 
 ### 2. Make it public via a custom subdomain
 
-R2 doesn't expose a public `*.r2.cloudflarestorage.com` URL — that endpoint is API-only and requires signed requests. Public access requires a **custom subdomain** under a Cloudflare-managed zone:
+R2 does not expose a public `*.r2.cloudflarestorage.com` URL — that endpoint is API-only and requires signed requests. Public access requires a **custom subdomain** under a Cloudflare-managed zone:
 
 Bucket → **Settings** → **Public access** → **Custom Domains** → **Connect Domain** → enter e.g. `repositories-test.omnipackage.org`. Cloudflare provisions DNS and TLS automatically.
 
-The `r2.dev` subdomain is rate-limited and meant for development; don't use it for a real repo.
+The `r2.dev` subdomain is rate-limited and meant for development; do not use it for a real repo.
 
 ### 3. Create R2 API credentials
 
@@ -158,12 +158,12 @@ Field notes:
 
 Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. Without purging, stale repo metadata (`Release`, `Packages.gz`, `repodata/`) can be served until TTL expires.
 
-If both `cloudflare_zone_id` and `cloudflare_api_token` are set, OmniPackage purges the affected URL prefix after each upload. They're treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but doesn't fail the publish.
+If both `cloudflare_zone_id` and `cloudflare_api_token` are set, OmniPackage purges the affected URL prefix after each upload. They are treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but does not fail the publish.
 
 To get them:
 
 - **Zone ID** — Cloudflare dashboard → your domain → **Overview** sidebar (right side).
-- **API token** — **My Profile** → **API Tokens** → **Create Token** → custom token with **Zone → Cache Purge → Purge** scoped to the zone. Don't use the global API key.
+- **API token** — **My Profile** → **API Tokens** → **Create Token** → custom token with **Zone → Cache Purge → Purge** scoped to the zone. Do not use the global API key.
 
 Skip if you can tolerate edge TTL on repo updates.
 
@@ -211,13 +211,13 @@ The bucket header then shows a "Public to internet" badge.
 
 Field notes:
 
-- `bucket_public_url` — path-style. Don't use virtual-hosted (`<bucket>.storage.googleapis.com`).
+- `bucket_public_url` — path-style. Do not use virtual-hosted (`<bucket>.storage.googleapis.com`).
 - `endpoint` — single global endpoint; no regional variant.
-- `region` — must match the bucket's actual location. SigV4 is region-bound; don't use `auto`.
+- `region` — must match the bucket's actual location. SigV4 is region-bound; do not use `auto`.
 - `force_path_style: true` — required; virtual-hosted style trips signature mismatches.
 
 ### 5. Cache and custom domains
 
 GCS serves public objects with `Cache-Control: public, max-age=3600` by default, so republished repo metadata can be stale for up to an hour. Override the bucket-default `Cache-Control` or set per-object headers if that matters.
 
-GCS can't serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer + backend bucket in front, or front it with Cloudflare — in the Cloudflare case the `cloudflare_zone_id` / `cloudflare_api_token` fields are useful for cache purges, same as the R2 setup.
+GCS cannot serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer with a backend bucket in front, or front it with Cloudflare — in the Cloudflare case the `cloudflare_zone_id` / `cloudflare_api_token` fields are useful for cache purges, same as the R2 setup.

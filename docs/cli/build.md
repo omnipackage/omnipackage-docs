@@ -4,7 +4,7 @@ description: "`omnipackage build` reference — build RPM and DEB packages for t
 
 # `omnipackage build`
 
-Build packages for the distros defined in `.omnipackage/config.yml` without publishing. A successful run produces `.rpm` / `.deb` files under `--build-dir`, ready to be picked up by [`publish`](publish.md).
+Build packages for the distros defined in `.omnipackage/config.yml` without publishing. A successful run produces `.rpm` / `.deb` files under `--build-dir`, ready for [`publish`](publish.md).
 
 ```
 omnipackage build [project-dir] [flags]
@@ -14,7 +14,7 @@ omnipackage build [project-dir] [flags]
 
 ## Flags
 
-Every flag has a default; the table shows what you get if you omit it.
+Every flag has a default; the table shows the value used if the flag is omitted.
 
 | Flag | Default | Description |
 |------|---------|-------------|
@@ -32,5 +32,5 @@ Every flag has a default; the table shows what you get if you omit it.
 
 ## Notes
 
-- The build matrix is `--distros` (or all configured distros if omitted) intersected with `builds:`. Each entry runs in its own container; one distro's failure doesn't poison the others (unless `--fail-fast`).
+- The build matrix is `--distros` (or all configured distros, if omitted) intersected with `builds:`. Each entry runs in its own container; one distro's failure does not affect the others unless `--fail-fast` is set.
 - Pass the same `--build-dir` to a follow-up [`publish`](publish.md) — `publish` reads the built artefacts from there.
