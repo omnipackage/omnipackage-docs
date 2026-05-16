@@ -1,3 +1,7 @@
+---
+description: Conceptual walkthrough of `omnipackage release` — how the CLI drives rpmbuild, debuild, createrepo_c, gpg, and podman/docker under the hood.
+---
+
 # How it works
 
 A high-level walkthrough of what happens during `omnipackage release`. This page is conceptual — it explains the model, not the flags.

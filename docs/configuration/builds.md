@@ -1,3 +1,7 @@
+---
+description: "`builds` reference — per-target entries that define one RPM or DEB package build per Linux distribution."
+---
+
 # `builds`
 
 Each entry in `builds:` defines one package build for one target distro. A project shipping to Debian 12 and Fedora 40 has two `builds` entries — almost always deduplicated with YAML anchors so shared fields live in one place.

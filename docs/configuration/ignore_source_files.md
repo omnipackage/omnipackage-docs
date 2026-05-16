@@ -1,3 +1,7 @@
+---
+description: "`ignore_source_files` reference — patterns excluded from the source tree before it is staged into the build container."
+---
+
 # `ignore_source_files`
 
 A list of patterns that exclude files and directories from the source tree before it gets staged into the build container. Applies equally to RPM and DEB builds.

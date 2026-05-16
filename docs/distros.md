@@ -1,3 +1,7 @@
+---
+description: Linux distributions OmniPackage builds DEB and RPM packages for, with the distro IDs used in config.yml and on the --distros command line.
+---
+
 # Supported distros
 
 OmniPackage builds DEB and RPM packages for the distributions below. Each has a distro ID used in `config.yml` (`builds[].distro`) and on the command line (`--distros <id>`).

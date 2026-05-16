@@ -1,3 +1,7 @@
+---
+description: "`repositories` reference — publishing targets (S3-compatible storage, local paths) where the built DEB/RPM packages and repo metadata are uploaded."
+---
+
 # `repositories`
 
 Each entry describes one publishing target. `publish` and `release` select one with `--repository <name>`; if omitted, the first entry is used.

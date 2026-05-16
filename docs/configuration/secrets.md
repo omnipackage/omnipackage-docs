@@ -1,3 +1,7 @@
+---
+description: "`secrets` reference — pass values like GPG keys and S3 credentials into the build without committing them to config.yml."
+---
+
 # `secrets`
 
 `secrets:` is a top-level map of name-to-value pairs that need to reach the build but shouldn't appear in `config.yml`. Values typically come from `${...}` substitution so the literal value stays in `.env` or the process environment.

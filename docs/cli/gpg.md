@@ -1,3 +1,7 @@
+---
+description: "`omnipackage gpg` reference — generate and convert GPG signing keys for package and repository signing."
+---
+
 # `omnipackage gpg`
 
 Generate and convert GPG signing keys. See [Signing packages](../guides/signing.md) for the broader workflow (export from your existing keyring, passphrase requirements, etc.).

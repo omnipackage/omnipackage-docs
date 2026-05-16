@@ -1,3 +1,7 @@
+---
+description: Overview of OmniPackage's `.omnipackage/config.yml` — every top-level key (builds, repositories, secrets, version_extractors, image_caches) with links to detailed reference pages.
+---
+
 # Configuration
 
 OmniPackage reads `.omnipackage/config.yml` from the project root. This section documents every top-level key.

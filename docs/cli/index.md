@@ -1,3 +1,7 @@
+---
+description: Overview of the `omnipackage` CLI — build, publish, release, info, gpg, portal, prime subcommands.
+---
+
 # CLI reference
 
 OmniPackage ships a single binary, `omnipackage`, with several subcommands.

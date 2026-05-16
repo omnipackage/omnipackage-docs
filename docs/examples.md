@@ -1,3 +1,7 @@
+---
+description: Real-world OmniPackage projects and minimal per-language templates — C, C++, CMake, Rust, Go, Python, Ruby, Crystal, Electron, Tauri.
+---
+
 # Examples
 
 Minimal single-purpose projects live in the [examples repo]({{ examples_github_url }}), one per language/build-system combo: `c_makefile`, `crystal`, `electron`, `go`, `python`, `ruby`, `rust`, `tauri`, `c_with_secrets`. Each ships a ready-to-use `.omnipackage/config.yml` and a README.

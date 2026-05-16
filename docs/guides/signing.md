@@ -1,3 +1,7 @@
+---
+description: Sign RPM and DEB packages and repository metadata with GPG — key generation, secret handling, and apt/dnf/zypper verification.
+---
+
 # Signing packages
 
 OmniPackage signs every published `.deb` / `.rpm` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM) with a GPG private key. End users import the matching public key once when they add the repository; `apt` / `dnf` / `zypper` reject any package or metadata file whose signature doesn't verify. The key is what makes a published repository trustable.

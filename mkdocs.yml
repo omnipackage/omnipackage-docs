@@ -1,7 +1,7 @@
 site_name: OmniPackage documentation
 site_url: "https://docs.omnipackage.org"
 repo_url: "https://github.com/omnipackage/omnipackage-docs"
-site_description: "Documentation for OmniPackage - Linux packaging made easy"
+site_description: "Reference, guides, and CLI docs for OmniPackage — build signed RPM and DEB packages for multiple Linux distros from one YAML config."
 site_author: "Oleg Antonyan"
 
 nav:
@@ -84,6 +84,40 @@ plugins:
   - privacy
   - git-revision-date-localized
   - macros
+  - llmstxt:
+      markdown_description: "OmniPackage is a CLI that drives standard Linux packaging tools (rpmbuild, debuild, createrepo_c, dpkg-scanpackages, gpg, podman/docker) from a single YAML config, so one project repo can ship signed RPM and DEB packages to many distros from a single `release` command."
+      full_output: llms-full.txt
+      sections:
+        Getting started:
+          - index.md: "Documentation home — what OmniPackage is, links into the rest of the site."
+          - getting_started.md: "Install the CLI and build the bundled C example end-to-end."
+        Guides:
+          - guides/how_it_works.md: "Architecture overview — how the CLI orchestrates rpmbuild/debuild/createrepo_c/gpg/podman."
+          - guides/signing.md: "GPG key generation, storing the key as a secret, and signing RPM/DEB packages and repository metadata."
+          - guides/s3_repository.md: "Publishing the built repository to S3-compatible storage (AWS S3, Cloudflare R2, MinIO)."
+          - guides/templates.md: "Liquid templating for the RPM .spec and DEB control files — per-distro values and shared snippets."
+          - guides/cicd.md: "Running OmniPackage in CI/CD — GitHub Actions matrix, caching, and the recommended release flow."
+          - guides/best_practices.md: "Recommended patterns for production package pipelines."
+        Configuration:
+          - configuration/index.md: "config.yml top-level keys and overall structure."
+          - configuration/builds.md: "builds — per-distro build target definitions."
+          - configuration/version_extractors.md: "version_extractors — strategies for stamping the package version."
+          - configuration/repositories.md: "repositories — publishing targets (S3-compatible, local, etc.)."
+          - configuration/image_caches.md: "image_caches — pre-built container images that skip setup on every build."
+          - configuration/secrets.md: "secrets — passing values into the build without committing them."
+          - configuration/ignore_source_files.md: "ignore_source_files — patterns excluded from the source tree before staging."
+        CLI reference:
+          - cli/index.md: "Overview of the omnipackage CLI subcommands."
+          - cli/build.md: "omnipackage build — build packages without publishing."
+          - cli/publish.md: "omnipackage publish — publish already-built packages to a repository."
+          - cli/release.md: "omnipackage release — build and publish in one step."
+          - cli/info.md: "omnipackage info — query project metadata; JSON output drives CI matrices."
+          - cli/gpg.md: "omnipackage gpg — generate and inspect signing keys."
+          - cli/portal.md: "omnipackage portal — open an interactive shell inside the build container for debugging."
+          - cli/prime.md: "omnipackage prime — populate image caches."
+        Reference:
+          - distros.md: "Supported DEB/RPM distributions and their distro IDs."
+          - examples.md: "Real-world projects and one-per-language minimal templates."
 
 extra_css:
   - stylesheets/extra.css

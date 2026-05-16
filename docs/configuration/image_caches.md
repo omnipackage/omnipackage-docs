@@ -1,3 +1,7 @@
+---
+description: "`image_caches` reference — pre-built container images that skip the slow `setup` stage on every build."
+---
+
 # `image_caches`
 
 Each build target pulls a container image. Image caches let you push prepared images (the distro base plus everything `setup` installs) to a registry — or store them locally — so subsequent builds start from the snapshot and skip `setup`.

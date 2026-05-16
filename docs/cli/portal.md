@@ -1,3 +1,7 @@
+---
+description: "`omnipackage portal` reference — open an interactive shell inside the build container to debug failing builds."
+---
+
 # `omnipackage portal`
 
 Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool for when a build fails and you want to poke around — try the same `dnf install ...` / `apt-get install ...` lines `setup` would run, see what error comes back, find the right package name, then update `config.yml`.
