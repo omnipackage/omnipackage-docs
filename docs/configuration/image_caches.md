@@ -26,7 +26,7 @@ image_caches:
       password: ${REGISTRY_TOKEN}
 ```
 
-The full image reference is `<url>/<namespace>/<image_tag>:<distro_id>`, e.g. `ghcr.io/myorg/omnipackage-cache:fedora_42`.
+The full image reference is `<url>/<namespace>/<distro_id>:<image_tag>`, e.g. `ghcr.io/myorg/fedora_42:omnipackage-cache`. One image per distro, with `image_tag` shared across all of them.
 
 ### `local`
 

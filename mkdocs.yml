@@ -24,6 +24,7 @@ nav:
       - ignore_source_files: configuration/ignore_source_files.md
   - "CLI reference":
       - Overview: cli/index.md
+      - init: cli/init.md
       - build: cli/build.md
       - publish: cli/publish.md
       - release: cli/release.md

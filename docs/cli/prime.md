@@ -31,7 +31,7 @@ omnipackage prime [project-dir] [flags]
 
 1. Pulls the distro base image.
 2. Runs the distro's `setup` and `setup_repo` commands inside a container, including any `before_build_script` from the build entry.
-3. Commits the resulting container as an image tagged `<image_tag>:<distro_id>`.
+3. Commits the resulting container as an image tagged `<distro_id>:<image_tag>`.
 4. For `provider: registry`, logs in and pushes the image. For `provider: local`, leaves it in the container runtime's local store only.
 
 ## When to re-prime

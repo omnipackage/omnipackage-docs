@@ -10,7 +10,7 @@ OmniPackage ships a single binary, `omnipackage`, with several subcommands.
 
 | Command | Purpose |
 |---------|---------|
-| [`init`](../guides/how_it_works.md#developer-side) | Scaffold `.omnipackage/` for a new project |
+| [`init`](init.md) | Scaffold `.omnipackage/` for a new project |
 | [`build`](build.md) | Build packages inside containers, don't publish |
 | [`publish`](publish.md) | Upload already-built packages to a repository |
 | [`release`](release.md) | `build` and `publish` in one pass per distro |
@@ -27,6 +27,13 @@ OmniPackage ships a single binary, `omnipackage`, with several subcommands.
 
 If neither is set, `podman` is preferred when available, otherwise `docker`. The command fails if neither is in `$PATH`.
 
+## Environment variables
+
+| Variable | Effect |
+|----------|--------|
+| `OMNIPACKAGE_CONTAINER_RUNTIME` | Same as `--container-runtime`; the flag takes precedence if both are set |
+| `NO_COLOR` | Disable ANSI colors in OmniPackage's own log output |
+
 ## Common per-command flags
 
 Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
@@ -40,6 +47,8 @@ Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`)
 | `--build-dir <path>` | `$TMPDIR/omnipackage-build` (typically `/tmp/omnipackage-build`) | Where intermediate build artefacts go; per-distro subdirs live under here |
 | `--fail-fast` | off (continue with remaining distros on error) | Stop on the first failing distro instead |
 | `--image-cache <name>` | none (no cache, full setup runs every time) | Use a configured [image cache](../configuration/image_caches.md) by name |
+
+`--distros`, `--image-cache`, `--repository`, and `--version-extractor` also accept their first-letter short forms (`-d`, `-i`, `-r`, `-v`) on every command that takes them.
 
 ## Common logging flags
 

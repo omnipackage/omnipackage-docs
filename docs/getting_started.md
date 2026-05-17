@@ -19,7 +19,7 @@ Verify:
 omnipackage --version
 ```
 
-Expected output: `omnipackage 0.1.4` or similar.
+Expected output: `omnipackage <version>` confirming the binary is on `$PATH`.
 
 ## Build the example project
 
