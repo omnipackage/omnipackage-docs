@@ -1,0 +1,1662 @@
+# OmniPackage documentation
+
+> Reference, guides, and CLI docs for OmniPackage — build signed RPM and DEB packages for multiple Linux distros from one YAML config.
+
+OmniPackage is a CLI that drives standard Linux packaging tools (rpmbuild, debuild, createrepo_c, dpkg-scanpackages, gpg, podman/docker) from a single YAML config, so one project repo can ship signed RPM and DEB packages to many distros from a single `release` command.
+
+# Getting started
+
+# OmniPackage documentation
+
+Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config. For the project overview and the "why", see [omnipackage.org](https://omnipackage.org/).
+
+## Where to start
+
+- [Getting started](https://docs.omnipackage.org/getting_started/index.md) — install the CLI and ship the bundled C example end-to-end.
+- [How it works](https://docs.omnipackage.org/guides/how_it_works/index.md) — what `omnipackage release` does, step by step.
+- [Configuration](https://docs.omnipackage.org/configuration/index.md) — every key in `.omnipackage/config.yml`.
+- [CLI reference](https://docs.omnipackage.org/cli/index.md) — every subcommand and flag.
+
+## 30-second example
+
+```sh
+omnipackage init .
+echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email you@example.com --format base64)" >> .env
+# edit .omnipackage/config.yml — point repositories: at your bucket
+omnipackage release .
+```
+
+Full walkthrough: [Getting started](https://docs.omnipackage.org/getting_started/index.md).
+
+## Real-world projects
+
+- [`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — Qt desktop music player. 31 build targets, Qt5/Qt6 split via YAML anchors, per-distro CMake flags, R2 with Cloudflare cache purges.
+- [`omnipackage/omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) — OmniPackage built with itself. `before_build_script` installs a current Rust toolchain on older distros; newer ones use distro-packaged Rust. Dual GHCR caches cover org and contributor-fork workflows.
+- [`omnipackage/examples`](https://github.com/omnipackage/examples) — minimal one-per-language templates (C, C++, CMake, Rust, Go, Python, Ruby, Crystal, Electron, Tauri).
+
+See [Examples](https://docs.omnipackage.org/examples/index.md) for details.
+
+## Links
+
+- [omnipackage.org](https://omnipackage.org/) — project landing page
+- [GitHub](https://github.com/omnipackage/omnipackage-rs) — source, issues, releases
+- [Install OmniPackage](https://repositories.omnipackage.org/omnipackage-rs/stable/install.html) — apt / dnf / zypper one-liners
+
+# Getting started
+
+Install the CLI and build the bundled C example end-to-end.
+
+## Install the CLI
+
+Two options:
+
+1. [OmniPackage repositories](https://repositories.omnipackage.org/omnipackage-rs/stable/install.html)
+1. [Source](https://github.com/omnipackage/omnipackage-rs/) — requires Rust 1.85+ (2024 edition)
+
+Verify:
+
+```text
+omnipackage --version
+```
+
+Expected output: `omnipackage <version>` confirming the binary is on `$PATH`.
+
+## Build the example project
+
+Clone the [examples repo](https://github.com/omnipackage/examples) and enter the C/Makefile sample:
+
+```text
+git clone https://github.com/omnipackage/examples.git && cd examples/c_makefile
+```
+
+Generate a GPG signing key. To reuse an existing one, see [Signing packages](https://docs.omnipackage.org/guides/signing/index.md).
+
+```text
+echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email 'you@example.com' --format base64)" >> .env
+```
+
+The key is ASCII-armored, then base64-encoded so it fits in an env variable without newline escaping.
+
+OmniPackage reads `.env` from the project root by default; override with `--env-file`. `.env` now holds your private signing key — keep it out of version control (the examples repo already gitignores it).
+
+Run `release` (`.` is the project directory containing `.omnipackage/config.yml`):
+
+```text
+omnipackage release .
+```
+
+The build log streams for each distro in `.omnipackage/config.yml`.
+
+The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
+
+## Next steps
+
+### Switch to S3 for production
+
+Local repositories suit testing; production usually means S3. The example config already includes an S3 block. Select it by name:
+
+```text
+omnipackage release . --repository "Example bucket"
+```
+
+### How secrets flow
+
+Secrets are declared in `config.yml` and passed from the environment via `${...}`. `config.yml` is the single source of truth; `.env` (or any other env file, or the process environment) holds the values. No hidden env settings exist beyond what `config.yml` declares.
+# Guides
+
+# How it works
+
+A high-level walkthrough of what happens during `omnipackage release`. This page is conceptual — it explains the model, not the flags.
+
+## What it is
+
+OmniPackage is a thin wrapper over existing Linux packaging infrastructure. `rpmbuild`, `debuild`, `createrepo_c`, `dpkg-scanpackages`, `gpg`, container runtimes (`podman` / `docker`), `apt` / `dnf` / `zypper` — none of it is reinvented. OmniPackage drives these tools in the right order, per distro, with sensible defaults, so one project repo can ship signed packages to many distros from one config file.
+
+The motivation is on [About](https://omnipackage.org/about): native Linux packaging works well for distro maintainers, but it is a steep climb for individual developers who want their users to `apt install` their software. OmniPackage closes that gap on both sides — developer UX (one config, one command) and user UX (a generated install page with four copy-paste commands).
+
+## Two flows, one pipeline
+
+There's a developer-side flow and a user-side flow. The pipeline produces both.
+
+```
+flowchart TD
+  src["source repo"] -->|init| cfg["omnipackage config"]
+  cfg -->|release| build["per-distro container build"]
+  build -->|sign| pkg["signed deb or rpm"]
+  pkg -->|publish| repo["signed repo on S3"]
+  repo --> page["generated install page"]
+  page --> install["users install"]
+```
+
+### Developer side
+
+1. **Scaffold** *(optional)* — `omnipackage init` detects the project type from marker files (`Cargo.toml`, `go.mod`, `CMakeLists.txt`, `pyproject.toml`, …) and renders a starter `.omnipackage/config.yml` plus per-format template files (RPM `.spec.liquid`, `debian/` directory). Detection and the generated templates are best-effort starting points, not finished configs — expect to edit `config.yml`, the spec, and the `debian/` files to match what your project builds and ships. Skip this step entirely if you would rather hand-write the config from one of the [examples](https://docs.omnipackage.org/examples/index.md).
+
+1. **Release** — `omnipackage release` reads the config and, for each configured distro:
+
+   - Pulls the distro container image (`opensuse/leap:16.0`, `fedora:42`, `debian:trixie`, etc.).
+   - Runs the distro's own setup commands inside the container — `zypper install ...`, `apt-get install build-essential debhelper ...`, `dnf install rpmdevtools ...`. These are not OmniPackage code; they are verbatim distro-native shell commands.
+   - Renders the `.spec` (RPM) or `debian/` (DEB) templates with project and distro variables via Liquid, then invokes the distro's native build tool (`rpmbuild`, `debuild`).
+   - Signs the resulting `.rpm` / `.deb` with the configured GPG key. The same key signs packages and repo metadata.
+   - Builds repo metadata with the distro-native tool — `createrepo_c` for RPM, `dpkg-scanpackages` for DEB.
+   - Uploads the signed packages and metadata to S3 (or any S3-compatible store: R2, GCS, B2, MinIO; see [`s3_repository`](https://docs.omnipackage.org/guides/s3_repository/index.md)).
+   - Generates an `install.html` landing page with the copy-paste commands users need.
+
+`omnipackage prime` sits orthogonally to this — it pre-runs the distro setup commands and snapshots the resulting container image to a registry, so subsequent releases skip the slow `apt-get install build-essential` phase. See [`image_caches`](https://docs.omnipackage.org/configuration/image_caches/index.md).
+
+`omnipackage` runs anywhere a container runtime does (laptop, VPS, any CI). One common setup is free end-to-end: GitHub Actions covers the build on the free tier for public repositories, and S3-compatible storage is either cheap (AWS) or free under common limits — Cloudflare R2, Backblaze B2, and Google Cloud Storage all have free tiers generous enough for small-to-mid projects.
+
+### User side
+
+What ends up at `<bucket_public_url>/<path_in_bucket>/install.html` is what a real end user sees:
+
+- For DEB-family distros, four lines: add the apt source, import the GPG key, `apt-get update`, `apt-get install <package>`.
+- For RPM-family distros, the equivalent `dnf` / `zypper` flow.
+
+After install, users receive updates through their distro's normal `apt upgrade` / `dnf upgrade` / `zypper update`. No opt-in updater, no Electron tray icon, no separate channel. The repo is a normal signed repo served over HTTPS.
+
+## What it does not do
+
+- Build other package formats. RPM and DEB only. Flatpak/Snap/AppImage/AUR/Nix are different bets — see [About](https://omnipackage.org/about) for why.
+- Host your repository. You bring the bucket. The trade-off: no vendor lock-in, and your packages live in storage you control.
+- Sandbox installed software. Packages run with the same privileges any `apt install` package gets — no Flatpak-style isolation unless you ship it as part of your package (an AppArmor / SELinux profile, a `bwrap` / `firejail` wrapper around your binary).
+
+# Signing packages
+
+OmniPackage signs every published `.deb` / `.rpm` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM) with a GPG private key. End users import the matching public key once when they add the repository; `apt` / `dnf` / `zypper` reject any package or metadata file whose signature does not verify. The key is what makes a published repository trustable.
+
+The key is referenced from `config.yml` as base64-wrapped ASCII armor, normally via `${GPG_KEY}` — substituted from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment.
+
+```yaml
+repositories:
+  - name: my-repo
+    provider: s3
+    gpg_private_key_base64: "${GPG_KEY}"
+    # ...
+```
+
+The rest of this page covers producing that `GPG_KEY` value — generated fresh, exported from your existing GPG keyring, or converted between formats.
+
+Keep the key secret and back it up
+
+The private key is the trust anchor for your repository. Treat it like any other production secret — never commit it, restrict access, and keep at least one backup somewhere safe (password manager, encrypted offline storage). **If you lose it, you cannot sign updates with the same key.** Signing future releases with a *new* key causes every user's `apt` / `dnf` / `zypper` to reject the updates with a signature-mismatch error; they will have to manually import the new public key (or remove and re-add the repository) before updates resume.
+
+## Generate a new key
+
+```sh
+omnipackage gpg generate --name "Your Name" --email you@example.com --format base64
+```
+
+This prints a single base64 line to stdout — append it to `.env`:
+
+```sh
+echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email you@example.com --format base64)" >> .env
+```
+
+What the command does:
+
+- Generates an RSA 4096-bit keypair with no expiration date.
+- Does **not** set a passphrase — required, since the build runs unattended in CI with no interactive prompt.
+- Prints only the private key. The public key is derived from it on every publish, so you do not need to track them separately.
+- Runs in a temporary, isolated `GNUPGHOME`; your real `~/.gnupg` is never touched.
+
+The same key signs packages and repo metadata for the lifetime of the repository — rotating it forces every existing user to re-import the new public key, so generate once and keep the `.env` value safe.
+
+## Use an existing key
+
+To reuse an existing GPG key, export it from your keyring and feed it through `omnipackage gpg convert`.
+
+### 1. Find the key ID
+
+```sh
+gpg --list-secret-keys --keyid-format=long
+```
+
+Note the `sec` line's key ID — the long hex after `rsa<bits>/`.
+
+### 2. Remove the passphrase, if any
+
+OmniPackage cannot use a passphrased key — there is no interactive prompt during a build. Strip the passphrase first:
+
+```sh
+gpg --edit-key <KEY_ID>
+> passwd
+# enter the current passphrase, then leave the new passphrase empty
+> save
+```
+
+To keep your everyday key passphrased, **do not** do this on it — instead generate a dedicated unprotected signing subkey, or generate a fresh key with `omnipackage gpg generate` (above) and use it exclusively for package signing.
+
+### 3. Export the private key as ASCII armor
+
+```sh
+gpg --armor --export-secret-keys <KEY_ID> > signing-key.asc
+```
+
+The result is a multi-line `-----BEGIN PGP PRIVATE KEY BLOCK-----` block.
+
+### 4. Convert to base64 and put it in `.env`
+
+```sh
+echo "GPG_KEY=$(omnipackage gpg convert --input signing-key.asc --input-format pem --output-format base64)" >> .env
+rm signing-key.asc
+```
+
+Delete `signing-key.asc` once it is in `.env` — no reason to keep two copies of the secret on disk.
+
+## Convert between formats
+
+`omnipackage gpg convert` round-trips between two key encodings:
+
+| Format   | What it is                                                                  | Where it is used                                                               |
+| -------- | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `pem`    | Plain ASCII armor (`-----BEGIN PGP PRIVATE KEY BLOCK-----`...). Multi-line. | What `gpg --armor --export-secret-keys` produces; human-inspectable.           |
+| `base64` | The PEM block, base64-encoded into one line of ASCII.                       | What `config.yml` expects in `gpg_private_key_base64`; what you put in `.env`. |
+
+Why base64? ASCII-armored PGP keys contain newlines, and newlines do not survive `.env` files, GitHub Actions secrets (the multi-line case works but is fragile), or shell `export VAR=...`. Base64 collapses the whole thing into a single line of `[A-Za-z0-9+/=]`, which round-trips cleanly through every layer between your laptop and the build container.
+
+```sh
+# pem → base64 (typical: prepare for .env)
+omnipackage gpg convert --input signing-key.asc --input-format pem --output-format base64
+
+# base64 → pem (typical: inspect or re-import)
+omnipackage gpg convert --input key.b64 --input-format base64 --output-format pem | gpg --import
+
+# stdin works too
+cat signing-key.asc | omnipackage gpg convert --input-format pem --output-format base64
+```
+
+The conversion is loss-free — the same bytes in a different envelope. Decoding the base64 form yields exactly the original ASCII-armored block.
+
+# Publishing to S3
+
+End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM repository.
+
+If you do not already have a preference, **Cloudflare R2 is recommended** — it is the most-tested provider in this project, charges nothing for egress (so serving packages is free), and includes 10 GB of free storage.
+
+## AWS S3
+
+### 1. Create the bucket
+
+S3 console → **Create bucket**. Pick a region (e.g. `eu-central-1`) and a globally-unique name. Leave "Block all public access" on for now — step 3 turns the right parts of it off.
+
+### 2. Create an IAM user with access keys
+
+Access keys come from **IAM**, not S3. Do not use the root account.
+
+1. IAM → **Users** → **Create user** (e.g. `omnipackage-publisher`). Programmatic access only, no console login.
+
+1. Attach an inline policy scoped to this single bucket:
+
+   ```json
+   {
+     "Version": "2012-10-17",
+     "Statement": [
+       {
+         "Effect": "Allow",
+         "Action": ["s3:ListBucket", "s3:GetBucketLocation"],
+         "Resource": "arn:aws:s3:::<bucket-name>"
+       },
+       {
+         "Effect": "Allow",
+         "Action": ["s3:PutObject", "s3:GetObject", "s3:DeleteObject", "s3:AbortMultipartUpload"],
+         "Resource": "arn:aws:s3:::<bucket-name>/*"
+       }
+     ]
+   }
+   ```
+
+1. **Security credentials** → **Create access key** → "Application running outside AWS". Copy both into your env file as `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` — the secret is shown only once and cannot be retrieved later.
+
+From GitHub Actions, prefer OIDC with an IAM role over static keys.
+
+### 3. Make objects publicly readable
+
+S3 buckets are private by default behind two independent gates; both must allow public reads.
+
+**Block Public Access (BPA)** — bucket-level master switch. **Permissions** → **Block public access (bucket settings)** → Edit. Uncheck:
+
+- "Block public access to buckets and objects granted through *new* public bucket or access point policies"
+- "Block public access to buckets and objects granted through *any* public bucket or access point policies"
+
+Leave the two ACL boxes checked — modern buckets use policies, not ACLs.
+
+**Bucket policy** — the actual grant. Same Permissions tab → **Bucket policy** → Edit:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::<bucket-name>/*"
+    }
+  ]
+}
+```
+
+The `Resource` ARN ends in `/*` (objects), not the bare bucket. With both gates in place, objects are reachable at `https://<bucket-name>.s3.<region>.amazonaws.com/<key>`.
+
+### 4. Repository config
+
+```yaml
+- name: AWS S3 eu-central-1
+  provider: s3
+  gpg_private_key_base64: "${GPG_PRIVATE_KEY_BASE64}"
+  package_name: "sample-project"
+  s3:
+    bucket: omnipackage-repositories-891377066957-eu-central-1-an
+    path_in_bucket: "sample-project"
+    bucket_public_url: "https://omnipackage-repositories-891377066957-eu-central-1-an.s3.eu-central-1.amazonaws.com"
+    endpoint: "https://s3.eu-central-1.amazonaws.com"
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+    region: eu-central-1
+    force_path_style: false
+```
+
+Field notes:
+
+- `bucket_public_url` — virtual-hosted REST endpoint (`https://<bucket>.s3.<region>.amazonaws.com`). Serves HTTPS once the bucket policy is in place. Do not use the `s3-website` endpoint (HTTP-only).
+- `endpoint` — regional S3 API endpoint, e.g. `https://s3.eu-central-1.amazonaws.com`.
+- `region` — actual AWS region. AWS requires it for SigV4 (R2 uses `auto`; AWS does not).
+- `force_path_style: false` — AWS uses virtual-hosted-style; path-style is deprecated.
+
+### 5. Troubleshooting
+
+`AccessDenied` on the public URL almost always means:
+
+1. **BPA still blocking the policy.** Permissions tab should show "Public" once both BPA and the policy are correct.
+1. **Bucket policy missing `/*`** on the resource ARN, or wrong bucket name.
+1. **Object doesn't exist.** Verify with `aws s3 ls s3://<bucket>/<prefix>/`. AWS returns `AccessDenied` instead of `NoSuchKey` when `s3:ListBucket` isn't granted, masking missing objects.
+
+## Cloudflare R2
+
+R2 is S3-compatible with a few quirks.
+
+### 1. Create the bucket
+
+Cloudflare dashboard → **R2** → **Create bucket**. R2 names are scoped to your account, not globally unique.
+
+### 2. Make it public via a custom subdomain
+
+R2 does not expose a public `*.r2.cloudflarestorage.com` URL — that endpoint is API-only and requires signed requests. Public access requires a **custom subdomain** under a Cloudflare-managed zone:
+
+Bucket → **Settings** → **Public access** → **Custom Domains** → **Connect Domain** → enter e.g. `repositories-test.omnipackage.org`. Cloudflare provisions DNS and TLS automatically.
+
+The `r2.dev` subdomain is rate-limited and meant for development; do not use it for a real repo.
+
+### 3. Create R2 API credentials
+
+R2 dashboard → **Manage R2 API Tokens** → **Create API token**. Permissions: **Object Read & Write**, scoped to the bucket. Cloudflare returns an Access Key ID, Secret Access Key, and the S3 API endpoint (`https://<account-id>.r2.cloudflarestorage.com`).
+
+### 4. Repository config
+
+```yaml
+- name: test repo on Cloudflare R2
+  provider: s3
+  gpg_private_key_base64: "${GPG_PRIVATE_KEY_BASE64}"
+  package_name: "sample-project"
+  s3:
+    bucket: repositories-test
+    path_in_bucket: "sample-project"
+    bucket_public_url: "https://repositories-test.omnipackage.org"
+    endpoint: "${CLOUDFLARE_R2_ENDPOINT}"
+    access_key_id: "${CLOUDFLARE_R2_ACCESS_KEY_ID}"
+    secret_access_key: "${CLOUDFLARE_R2_SECRET_ACCESS_KEY}"
+    region: auto
+    force_path_style: true
+    # Optional — see "CDN cache purge" below
+    cloudflare_zone_id: "${CLOUDFLARE_ZONE_ID}"
+    cloudflare_api_token: "${CLOUDFLARE_API_TOKEN}"
+```
+
+Field notes:
+
+- `bucket_public_url` — your custom subdomain. Must be the public-facing host, **not** the R2 API endpoint.
+- `endpoint` — the R2 S3 API endpoint, account-scoped. Used only for uploads.
+- `region: auto` — R2 ignores region; SigV4 still needs *some* value, and `auto` is what Cloudflare documents.
+- `force_path_style: true` — required. R2's endpoint is account-scoped, so the bucket goes in the path.
+
+### 5. CDN cache purge (optional)
+
+Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. Without purging, stale repo metadata (`Release`, `Packages.gz`, `repodata/`) can be served until TTL expires.
+
+If both `cloudflare_zone_id` and `cloudflare_api_token` are set, OmniPackage purges the affected URL prefix after each upload. They are treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but does not fail the publish.
+
+To get them:
+
+- **Zone ID** — Cloudflare dashboard → your domain → **Overview** sidebar (right side).
+- **API token** — **My Profile** → **API Tokens** → **Create Token** → custom token with **Zone → Cache Purge → Purge** scoped to the zone. Do not use the global API key.
+
+Skip if you can tolerate edge TTL on repo updates.
+
+## Google Cloud Storage
+
+GCS speaks an S3-compatible API.
+
+### 1. Create the bucket
+
+Console → **Cloud Storage** → **Buckets** → **+ Create**. Names are globally unique. Set **Access control = Uniform bucket-level access**.
+
+### 2. Service account + HMAC keys
+
+GCS authenticates the S3 API with **HMAC keys**, not JSON service-account files. Bind the key to a dedicated service account so it can be rotated independently.
+
+1. **IAM & Admin** → **Service Accounts** → create `omnipackage-publisher`.
+1. Bucket → **Permissions** → **Grant access**. Principal = service account email; role = **Storage Object Admin**.
+1. **Cloud Storage** → **Settings** → **Interoperability** → **+ Create a key for a service account** → pick the publisher SA.
+1. Copy the access key and secret into your env file as `GCS_HMAC_ACCESS_KEY_ID` and `GCS_HMAC_SECRET_ACCESS_KEY`.
+
+### 3. Make objects publicly readable
+
+- **Public access prevention** (Configuration tab) → **Off**.
+- **Permissions** → **Grant access**: principal `allUsers`, role **Storage Object Viewer**.
+
+The bucket header then shows a "Public to internet" badge.
+
+### 4. Repository config
+
+```yaml
+- name: GCS europe-southwest1
+  provider: s3
+  gpg_private_key_base64: "${GPG_PRIVATE_KEY_BASE64}"
+  package_name: "sample-project"
+  s3:
+    bucket: omnipackage-repos
+    path_in_bucket: "sample-project"
+    bucket_public_url: "https://storage.googleapis.com/omnipackage-repos"
+    endpoint: "https://storage.googleapis.com"
+    access_key_id: "${GCS_HMAC_ACCESS_KEY_ID}"
+    secret_access_key: "${GCS_HMAC_SECRET_ACCESS_KEY}"
+    region: europe-southwest1
+    force_path_style: true
+```
+
+Field notes:
+
+- `bucket_public_url` — path-style. Do not use virtual-hosted (`<bucket>.storage.googleapis.com`).
+- `endpoint` — single global endpoint; no regional variant.
+- `region` — must match the bucket's actual location. SigV4 is region-bound; do not use `auto`.
+- `force_path_style: true` — required; virtual-hosted style trips signature mismatches.
+
+### 5. Cache and custom domains
+
+GCS serves public objects with `Cache-Control: public, max-age=3600` by default, so republished repo metadata can be stale for up to an hour. Override the bucket-default `Cache-Control` or set per-object headers if that matters.
+
+GCS cannot serve a custom domain over HTTPS on its own. Either put a Google HTTPS Load Balancer with a backend bucket in front, or front it with Cloudflare — in the Cloudflare case the `cloudflare_zone_id` / `cloudflare_api_token` fields are useful for cache purges, same as the R2 setup.
+
+# Templates
+
+OmniPackage renders the RPM `.spec` file and the DEB `debian/` control files from [Liquid](https://shopify.github.io/liquid/) templates. This page covers what's available in the template context and how to thread per-distro values into a single shared template.
+
+## Why template
+
+A working `.spec` file or `debian/control` is mostly boilerplate identical across distros in a family — same `%build` recipe, same `Source0`, same `Description`. The parts that differ are small: package dependency names (`qt6-base-common-devel` on openSUSE vs. `qt6-qtbase-devel` on Fedora), optional CMake flags (Qt5 vs. Qt6), occasional tool overrides (a different compiler on an older distro).
+
+Without templating, you would carry a copy of the spec for every distro and watch them drift. With templating, one `.spec.liquid` and one `debian/` directory; everything that varies — names, version, maintainer, deps, custom flags — comes from `config.yml` per distro.
+
+## Where templates live
+
+In `config.yml`:
+
+```yaml
+rpm:
+  spec_template: ".omnipackage/myapp.spec.liquid"
+
+deb:
+  debian_templates: ".omnipackage/deb"
+```
+
+- **RPM**: a single file ending in `.liquid`. The rendered output goes into the rpmbuild tree as the spec file.
+- **DEB**: a directory. Every file inside ending in `.liquid` is rendered (the `.liquid` suffix is stripped: `control.liquid` → `control`). Files without `.liquid` are copied verbatim — useful for `compat`, license files, scripts, etc.
+
+A typical DEB tree contains `control.liquid`, `changelog.liquid`, `rules.liquid`, and `compat.liquid`. See the [`c_makefile` example](https://github.com/omnipackage/examples/tree/master/c_makefile/.omnipackage/deb) for a complete minimal set.
+
+## Built-in variables
+
+Every template renders with these in scope:
+
+| Variable               | Type                     | Source                                                      |
+| ---------------------- | ------------------------ | ----------------------------------------------------------- |
+| `version`              | string                   | Output of the configured `version_extractor`                |
+| `current_time_rfc2822` | string                   | Render-time timestamp; used in `debian/changelog`           |
+| `package_name`         | string                   | From the build entry in `config.yml`                        |
+| `maintainer`           | string                   | From the build entry                                        |
+| `homepage`             | string                   | From the build entry                                        |
+| `description`          | string                   | From the build entry                                        |
+| `build_dependencies`   | array of strings         | From the build entry                                        |
+| `runtime_dependencies` | array of strings         | From the build entry                                        |
+| `secrets`              | object (string → string) | From the `secrets:` block; access as `{{ secrets.MY_KEY }}` |
+| `source_folder_name`   | string                   | RPM only — name of the staged source tarball directory      |
+
+Arrays render with the Liquid `join` filter:
+
+```liquid
+BuildRequires: {{ build_dependencies | join: ' ' }}
+Requires: {{ runtime_dependencies | join: ', ' }}
+```
+
+(RPM uses spaces, DEB uses `,` — the templates choose, not the engine.)
+
+## Custom per-distro variables
+
+Any field on a build entry in `config.yml` beyond the known keys above is passed straight into the template context with the same name. This is the mechanism for per-distro variation.
+
+Example from [`mpz`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) — same Qt-based project compiled against Qt5 or Qt6 depending on the distro:
+
+```yaml
+debian_qt5: &debian_qt5
+  build_dependencies: [gcc, make, cmake, qtbase5-dev, qtmultimedia5-dev]
+  CMAKE_EXTRA_CLI: "-DUSE_QT5=ON"
+  <<: *deb
+
+debian_qt6: &debian_qt6
+  build_dependencies: [gcc, make, cmake, qt6-base-dev, qt6-multimedia-dev]
+  <<: *deb
+
+builds:
+  - distro: "debian_12"
+    <<: *debian_qt5
+  - distro: "debian_13"
+    <<: *debian_qt6
+```
+
+Then in the [shared spec / rules templates](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/deb/rules.liquid):
+
+```liquid
+cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr {{ CMAKE_EXTRA_CLI }} ..
+```
+
+For Qt5 distros this expands to `... -DUSE_QT5=ON ..`; for Qt6 distros it expands to `... ..` (the extra space is harmless to `cmake`). One template, two distro flavors, no fork.
+
+Custom values can be strings, integers, floats, or booleans — whatever YAML produces. They are addressed by the same key used in YAML.
+
+## Liquid basics
+
+- `{{ var }}` — substitute a value.
+- `{{ var | filter }}` — apply a filter (`join`, `upcase`, `default`, `size`, etc.).
+- `{% if cond %}...{% endif %}` — conditional block.
+- `{% for x in arr %}...{% endfor %}` — loop.
+
+Useful patterns:
+
+```liquid
+{% if runtime_dependencies.size > 0 %}
+Requires: {{ runtime_dependencies | join: ', ' }}
+{% endif %}
+```
+
+```liquid
+{{ secrets.SENTRY_DSN | default: "" }}
+```
+
+## Undefined variables render as empty
+
+Referencing a variable that was not set anywhere does **not** error — it renders as an empty string (and evaluates as falsy in `{% if %}`). This is deliberate, so a custom variable like `CMAKE_EXTRA_CLI` can be set on some distros and omitted on others without conditional guards in the template.
+
+The flip side: typos render silently. If a value is not appearing where you expect, double-check the spelling in both `config.yml` and the template.
+
+# CI/CD integration
+
+Running `omnipackage release` from CI so every push, tag, or other trigger produces signed packages.
+
+## GitHub Actions
+
+A suggested setup, adapted from [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire triggers, secrets, and job topology differently; the shape below is a reasonable starting point. The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
+
+| File                            | Trigger                    | Purpose                                  |
+| ------------------------------- | -------------------------- | ---------------------------------------- |
+| `_omnipackage.yml`              | `workflow_call`            | Reusable release pipeline                |
+| `omnipackage-next.yml`          | Push to `master`           | Rolling **next** channel                 |
+| `omnipackage-stable.yml`        | GitHub `release` published | **Stable** channel from a tagged release |
+| `refresh-omnipackage-cache.yml` | Monthly cron + manual      | Re-primes the container image cache      |
+
+When-to-release lives in the trigger wrappers; how-to-release lives in the shared workflow. The two channels differ only in which `repositories:` entry they publish to and which `version_extractor` they use.
+
+The split is optional — a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you do not need and call the pipeline directly.
+
+### The shared workflow
+
+`_omnipackage.yml` takes two inputs and runs two jobs:
+
+```yaml
+on:
+  workflow_call:
+    inputs:
+      repository:
+        required: true
+        type: string
+      version_extractor:
+        required: true
+        type: string
+
+jobs:
+  list-distros:
+    runs-on: ubuntu-24.04
+    outputs:
+      distros: ${{ steps.get-distros.outputs.distros }}
+    steps:
+      - name: Install omnipackage
+        run: |
+          echo 'deb https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04 stable/' | sudo tee /etc/apt/sources.list.d/omnipackage_omnipackage.list
+          curl -fsSL https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04/stable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/omnipackage_omnipackage.gpg > /dev/null
+          sudo apt-get update
+          sudo apt-get install omnipackage
+      - uses: actions/checkout@v6
+      - id: get-distros
+        run: echo "distros=$(omnipackage info --list-distros . --format json)" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: [list-distros]
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: omnipackage-${{ inputs.repository }}-${{ matrix.distro }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: ${{ fromJson(needs.list-distros.outputs.distros) }}
+    steps:
+      - name: Install omnipackage
+        run: |
+          echo 'deb https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04 stable/' | sudo tee /etc/apt/sources.list.d/omnipackage_omnipackage.list
+          curl -fsSL https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04/stable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/omnipackage_omnipackage.gpg > /dev/null
+          sudo apt-get update
+          sudo apt-get install omnipackage
+      - uses: actions/checkout@v6
+      - run: echo "${{ secrets.OMNIPACKAGE_DOTENV }}" > .env
+      - run: omnipackage release . --build-dir $RUNNER_TEMP --repository "${{ inputs.repository }}" --distros "${{ matrix.distro }}" --version-extractor "${{ inputs.version_extractor }}" --image-cache github
+```
+
+Field notes:
+
+- `list-distros` emits a JSON array of distro IDs that `fromJson()` expands into the `release` matrix. Adding a build target to `config.yml` widens the matrix automatically.
+- `concurrency.group` keyed on `(repository, distro)` with `cancel-in-progress: false` queues same-channel runs instead of racing — concurrent writers corrupt repo metadata (`Release`, `Packages.gz`, `repodata/`).
+- `fail-fast: false` lets one distro's failure leave the other distros' packages published.
+- `--image-cache github` references the `image_caches:` entry below.
+
+### Stable vs next triggers
+
+Two thin wrappers pick *when* and *which channel*.
+
+**Next** — `omnipackage-next.yml`. Every push to `master`:
+
+```yaml
+name: Release packages - next
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+jobs:
+  run:
+    uses: ./.github/workflows/_omnipackage.yml
+    secrets: inherit
+    with:
+      repository: "Linux packages - next"
+      version_extractor: "git"
+```
+
+`version_extractor: "git"` derives a unique, monotonic version from the commit. Swap `push:` for `workflow_run:` to publish only from green CI commits.
+
+**Stable** — `omnipackage-stable.yml`. Only when a GitHub release is published:
+
+```yaml
+name: Release packages - stable
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  run:
+    uses: ./.github/workflows/_omnipackage.yml
+    secrets: inherit
+    with:
+      repository: "Linux packages - stable"
+      version_extractor: "stable"
+```
+
+Drafts and pre-releases do not trigger. `version_extractor: "stable"` reads the version from the GitHub release tag — see [version_extractors](https://docs.omnipackage.org/configuration/version_extractors/index.md) for alternatives. Both wrappers also accept `workflow_dispatch` for re-runs without retagging.
+
+`secrets: inherit` is required — without it, `OMNIPACKAGE_DOTENV` is not visible to the called workflow.
+
+### Image cache priming
+
+Without a primed cache, every release rebuilds each per-distro container from scratch (minutes per distro). With a cache, `build` starts from a registry pull.
+
+`refresh-omnipackage-cache.yml` re-primes monthly and on demand. Same `list-distros` job; the second job swaps `release` for `prime`:
+
+```yaml
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '44 6 1 * *'
+
+permissions:
+  packages: write
+
+jobs:
+  # list-distros: same as _omnipackage.yml
+
+  image_cache:
+    needs: [list-distros]
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: ${{ fromJson(needs.list-distros.outputs.distros) }}
+    steps:
+      - name: Install omnipackage
+        run: |
+          # same as _omnipackage.yml
+      - uses: actions/checkout@v6
+      - run: echo "${{ secrets.OMNIPACKAGE_DOTENV }}" > .env
+      - run: omnipackage prime . --image-cache github --distros "${{ matrix.distro }}"
+```
+
+- `permissions: packages: write` lets `GITHUB_TOKEN` push images to GHCR (the default is read-only).
+- `cron: '44 6 1 * *'` runs 06:44 UTC on the 1st of each month — off-the-hour minutes avoid scheduler throttling.
+- Re-prime when distro base images receive security updates, the `setup` script changes, or the toolchain in `setup` moves. The monthly cron catches the first; trigger manually for the others.
+
+The matching `image_caches:` entry:
+
+```yaml
+image_caches:
+  - name: github
+    provider: registry
+    image_tag: omnipackage-cache
+    registry:
+      url: ghcr.io
+      namespace: ${GITHUB_REGISTRY_NAMESPACE}
+      username: ${GITHUB_REGISTRY_USERNAME}
+      password: ${GITHUB_REGISTRY_PASSWORD}
+```
+
+The three `GITHUB_REGISTRY_*` env vars come from the `.env` blob.
+
+### Secrets
+
+`OMNIPACKAGE_DOTENV` is a convenience: paste the entire local `.env` into one multi-line GitHub Actions secret, write it back verbatim in CI, and rotate in one place. The plain pattern (one secret per env var, exposed via `env:` on the step) works equally well; the two can be mixed.
+
+`.env` lives in `$GITHUB_WORKSPACE`, is discarded with the runner, is not uploaded as an artifact, and is not visible to the build container unless `config.yml` explicitly maps it.
+
+# Best practices
+
+Conventions that make OmniPackage-built packages behave well on the distros they target. None are enforced by the tool — they are guidance from production packaging.
+
+## Add one repo, install works
+
+The user-facing contract: **a user adds your OmniPackage repository and nothing else, and `apt install <your-package>` / `dnf install <your-package>` resolves cleanly, every runtime dependency satisfied from the repositories the distro ships with.** No extra PPAs, no Copr, no third-party repos, no manual `.deb` downloads for a transitive dependency.
+
+That contract is what keeps the generated `install.html` a four-line snippet instead of a small howto. Everything else on this page follows from holding that line.
+
+## One project per repository
+
+Host a single project per OmniPackage repository. The generated install flow assumes it, and the user experience falls apart otherwise.
+
+`install.html` ends in `apt install <your-package>` — one package, no ambiguity. Stacking unrelated projects into one bucket breaks that in one of two ways:
+
+- **Non-overlapping audiences.** Users who add your repo see package names they do not recognise. Every `apt search` hit becomes "what is this, and why is it on my system?" — the trust signal of a focused repo is gone.
+- **Overlapping audiences.** Users installing more than one of your projects hit a duplicate-source warning unless the install page for project B detects that project A's repo is already configured and skips the add step. Doing that portably across `apt` / `dnf` / `zypper` is extra shell logic the install snippet does not currently carry.
+
+The install page is one-project-shaped as well — it names a single package in the final command, and supporting "add this repo, then pick from the list" is workable but not currently implemented. This may change in a future release; until then, keep one project per repository. The bucket itself can be shared — use a distinct [`path_in_bucket`](https://docs.omnipackage.org/configuration/repositories/index.md) per project to isolate each repo tree. Separate buckets work too but are not required.
+
+The occasional objection is user-side: some users prefer to avoid multiple third-party repos on their system. Reasonable, but users who object on those grounds typically would not accept *one* third-party repo either — the trust decision is per-source, not per-package, and the system-side cost of three small focused repos is not meaningfully different from one large one.
+
+## Runtime dependencies must come from the distro's standard repos
+
+Every package in `runtime_dependencies` — and every shared library the binary links at run time — must resolve from the distro's default repositories: `main`/`universe` on Debian and Ubuntu, the default repos on Fedora, openSUSE, AlmaLinux, Rocky, and so on. Those are the repositories every install of the distro already has configured.
+
+This is a feature, not a constraint. A dependency on `libssl` or `qt6-base` resolves instantly, picks up security updates through `apt upgrade` / `dnf upgrade`, and adds nothing to your package's disk footprint.
+
+Two consequences:
+
+- **Pick library versions available across your distro matrix.** If you list `qt6` on a distro that only ships `qt5`, the package will not install. The fix is to narrow the supported distros or carry a per-distro variant via [per-distro custom variables](https://docs.omnipackage.org/guides/templates/#custom-per-distro-variables); [`mpz`](https://github.com/olegantonyan/mpz) builds Qt5 on older distros and Qt6 on newer ones. Distro lifetimes filter further — no point working around a version that only exists on an EOL release.
+- **Do not bundle what the distro already ships.** Vendoring a copy of `libcurl` or `zlib` when the distro provides one wastes space, pins you to whatever version you bundled, and means a CVE in that library is not patched until *you* cut a new release.
+
+## When a dependency isn't available, static-link it
+
+OmniPackage is not a distro. You publish your own repository, maintain only your own packages, and nobody downstream is recompiling against your shared libraries. That changes the rules.
+
+Distro packaging policies (Debian Policy, Fedora Packaging Guidelines, openSUSE's, and others) generally forbid bundled or statically-linked third-party libraries and require everything to link against system shared libs. That rule exists because the distro maintains the entire dependency graph: one `libfoo` security update flows to every consumer at once. Bundled copies break that guarantee.
+
+You do not ship into that graph. So the rule relaxes from a requirement to a recommendation: **prefer shared libraries when the distro has them; static-link when it does not.**
+
+Where static linkage is the right call:
+
+- **Library missing from one distro in your matrix.** Dropping Debian 12 because it does not ship a recent enough `libfmt` is a worse trade than statically linking `libfmt` into the one Debian 12 build. Everywhere else still uses the system shared library.
+- **Library too old on one distro.** Same shape — your code needs `libfoo >= 11`, but Ubuntu 22.04 has `libfoo 9`. Static-link on Ubuntu 22.04 (and only there); use the shared `libfoo` everywhere else. See [`mpz`](https://github.com/olegantonyan/mpz) for the same pattern applied to Qt5/Qt6 build flags.
+- **Languages that static-link by default.** Rust and Go produce static binaries against their own crates and packages as a matter of course. That is idiomatic and not worth fighting — only `libc` and a small set of system libs typically remain dynamic, and those *should* stay dynamic so they pick up distro security updates.
+
+In practice this is a narrow exception, not a blanket policy. Most of the dependency list still points at distro-shipped packages; one or two libraries are static-linked on the specific distros that need it. If you find yourself static-linking *most* dependencies on *most* distros, that warrants a second look — usually the distro matrix is wrong, or the library choice is.
+
+## `before_build_script` is for build-time tooling, not runtime deps
+
+When a distro's compiler or toolchain is too old, use [`before_build_script`](https://docs.omnipackage.org/configuration/builds/index.md): a shell script that runs inside the build container before the package build, typically to install a newer toolchain. Pulling a current Rust via `rustup`, installing a recent Node via `nvm`, dropping in a newer CMake from upstream — all fine. [`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) does this on older distros and uses distro-packaged Rust on newer ones.
+
+The key distinction: `before_build_script` provisions the **build environment**, not the **user's machine**. Anything it installs is discarded with the container after the build. The produced `.deb` / `.rpm` must still satisfy the rule above — every runtime dependency must come from the distro's standard repositories.
+
+So: use `before_build_script` freely for a modern toolchain. Do not use it to paper over a runtime dependency you cannot satisfy — that produces a package that builds and installs but fails to launch, because the build-time `libfoo` is not on the user's machine. If a runtime library is not in the distro's standard repos, static-link it (above) instead.
+
+## Test the installed package, not just the build
+
+`omnipackage release` succeeding means the package built and the repository signed cleanly. It does not mean the package *installs and runs* on a fresh system. Build hosts have headers, build tools, and prior dependency installations that production user machines do not. A package that depends on a `-devel` / `-dev` package by mistake, or that links a `before_build_script`-installed library, will build fine and fail on `apt install` (or at first launch) for the first user who tries it.
+
+[`omnipackage portal`](https://docs.omnipackage.org/cli/portal/index.md) provides the right environment: an interactive root shell in the plain distro base image, no `setup` applied, container discarded on `exit`. Open one per distro, add your published repo, run `apt install <your-package>` (or `dnf install` / `zypper install`), then run the binary — the snippet from your generated `install.html` is what to paste. Do this at least once per distro before announcing a release.
+
+## Trust is in the developer, not the channel
+
+A question worth answering up-front when shipping a third-party repository: "why should a user trust me as the package provider?"
+
+The honest answer is that the trust decision is not about the distribution channel. Users trust *you* — the developer — or they do not. If they trust you, they will `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your repo. If they do not, none of those work either — the channel does not supply trust that was not already there.
+
+OmniPackage does not move the needle in either direction. It is open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only provides shims that drive the standard Linux packaging tools — `rpmbuild`, `debuild`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.
+# Configuration
+
+# Configuration
+
+OmniPackage reads `.omnipackage/config.yml` from the project root. This section documents every top-level key.
+
+## Top-level keys
+
+| Key                                                                                              | Required | Purpose                                                   |
+| ------------------------------------------------------------------------------------------------ | -------- | --------------------------------------------------------- |
+| [`version_extractors`](https://docs.omnipackage.org/configuration/version_extractors/index.md)   | yes      | How to determine the package version                      |
+| [`builds`](https://docs.omnipackage.org/configuration/builds/index.md)                           | yes      | Per-distro build configuration                            |
+| [`repositories`](https://docs.omnipackage.org/configuration/repositories/index.md)               | no       | Where to publish built packages                           |
+| [`image_caches`](https://docs.omnipackage.org/configuration/image_caches/index.md)               | no       | Cached container images to speed up builds                |
+| [`secrets`](https://docs.omnipackage.org/configuration/secrets/index.md)                         | no       | Environment-variable substitution into `config.yml`       |
+| [`ignore_source_files`](https://docs.omnipackage.org/configuration/ignore_source_files/index.md) | no       | Patterns for files to exclude from the staged source tree |
+
+## Environment substitution
+
+Any string in `config.yml` can reference an environment variable with `${VAR}`. Values resolve from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment. Only variables referenced in `config.yml` are consumed.
+
+A `.env` file is the recommended default: every value lives in one place, the same file works for local runs, and it copy-pastes cleanly into a single CI secret. In CI, passing values directly through the runner's environment (per-secret env vars on the step) can be cleaner for per-secret rotation. Both styles work and can be mixed.
+
+# `builds`
+
+Each entry in `builds:` defines one package build for one target distro. A project shipping to Debian 12 and Fedora 40 has two `builds` entries — typically deduplicated with YAML anchors so shared fields live in one place.
+
+## Keys per build entry
+
+| Key                    | Required | Description                                                                                                                                                                                                       |
+| ---------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `distro`               | yes      | Distro ID — see [Supported distros](https://docs.omnipackage.org/distros/index.md). Unknown IDs are silently skipped at build time                                                                                |
+| `package_name`         | yes      | Name of the resulting `.rpm` / `.deb`                                                                                                                                                                             |
+| `maintainer`           | yes      | `Name <email>` — used in the spec/control `Maintainer:` field and changelog entries                                                                                                                               |
+| `homepage`             | yes      | Project URL — written into the spec `URL:` and DEB `Homepage:` fields                                                                                                                                             |
+| `description`          | yes      | Short package description                                                                                                                                                                                         |
+| `build_dependencies`   | no       | Distro package names installed in the container before the build. **Names differ per distro family** (`qt6-base-dev` on Debian, `qt6-qtbase-devel` on Fedora) — the main reason for per-family anchors            |
+| `runtime_dependencies` | no       | Distro package names declared as runtime deps. Most projects need few or none; see below                                                                                                                          |
+| `before_build_script`  | no       | Path (relative to source dir) to a shell script run inside the container before the package build, e.g. to install a toolchain that isn't in the distro repos                                                     |
+| `rpm.spec_template`    | RPM only | Path (relative to source dir) to a `.spec.liquid` file. Required for RPM-format distros                                                                                                                           |
+| `deb.debian_templates` | DEB only | Path (relative to source dir) to a directory of `debian/*.liquid` files. Required for DEB-format distros                                                                                                          |
+| *(custom fields)*      | no       | Arbitrary scalar values (string, bool, int, float — not arrays or objects) passed straight into the template context. See [Templates](https://docs.omnipackage.org/guides/templates/#custom-per-distro-variables) |
+
+`rpm:` and `deb:` blocks are not a per-build override of a default — only the block matching the distro's package format is consulted, so each build entry needs the one for its format. Both are usually defined once via a YAML anchor (see below) rather than repeated.
+
+Unknown top-level keys in `config.yml` are silently ignored, which is what lets the anchor pattern below work cleanly.
+
+### When `runtime_dependencies` is needed
+
+Rarely, for most projects. `rpmbuild` and `dpkg-shlibdeps` scan the built binaries' linked libraries during the package build and add the providing distro packages as dependencies automatically — the resulting package already declares everything it dynamically links against.
+
+Cases where explicit entries do matter:
+
+- **`dlopen`-loaded libraries** — not present in `DT_NEEDED`, so the build-time scanner cannot see them. Anything loaded by name at runtime (plugins, optional codecs, GPU backends) must be listed.
+- **Non-library runtime requirements** — external tools the package shells out to (`gpg`, `ffmpeg`, `podman`), data-only packages, fonts, themes.
+- **Choice between alternatives** — when more than one distro package can satisfy the same need (e.g. either `podman` or `docker`), declare the alternation explicitly. See syntax below.
+
+### `runtime_dependencies` syntax
+
+Each entry is a plain distro package name like `gpg` or `libqt5multimedia5-plugins` — sufficient for most projects. Strings pass through verbatim into the rendered spec / control file, so use the syntax the target distro's package format understands.
+
+OR-alternative forms — DEB pipe-OR (`pkg | other-pkg`) and RPM rich-dep syntax (`(pkg or other-pkg)`) — are **only** needed when more than one distro package can satisfy the same need. If a single distro package provides what you want, write its name as a plain string.
+
+```yaml
+# Typical case: plain package names
+runtime_dependencies: [gpg, ffmpeg]
+
+# Alternation: only when either provider is acceptable
+runtime_dependencies: ["podman | docker", gpg]              # DEB target
+runtime_dependencies: ["(podman or docker)", gpg]           # RPM target
+```
+
+## DRYing up with YAML anchors
+
+Without anchors, shipping to ten distros means repeating the same `package_name`, `maintainer`, `homepage`, `description`, and template paths ten times. With anchors, each build entry shrinks to one or two lines.
+
+A typical layout has three layers: **common** (shared across every build), **per-format** (RPM vs DEB plus template paths), and **per-distro-family** (where dependency lists diverge):
+
+```yaml
+common: &common
+  package_name: my-app
+  maintainer: "You <you@example.com>"
+  homepage: https://example.com
+  description: A short description
+
+rpm: &rpm
+  <<: *common
+  rpm:
+    spec_template: ".omnipackage/my-app.spec.liquid"
+
+deb: &deb
+  <<: *common
+  deb:
+    debian_templates: ".omnipackage/deb"
+
+debian_family: &debian_family
+  build_dependencies: [build-essential, cmake]
+  <<: *deb
+
+fedora_family: &fedora_family
+  build_dependencies: [gcc, make, cmake]
+  <<: *rpm
+
+builds:
+  - distro: "debian_12"
+    <<: *debian_family
+  - distro: "debian_13"
+    <<: *debian_family
+  - distro: "ubuntu_24.04"
+    <<: *debian_family
+  - distro: "fedora_42"
+    <<: *fedora_family
+  - distro: "almalinux_9"
+    <<: *fedora_family
+```
+
+Syntax notes:
+
+- `&name` defines an anchor; `*name` references it.
+- `<<:` is YAML's merge key — it copies every key from the referenced mapping into the current one. Keys defined explicitly on the entry override merged values.
+- Anchors chain transitively: `*debian_family` merges `*deb`, which merges `*common`, so each `builds` entry inherits everything up the chain.
+- The top-level keys `common:`, `rpm:`, `deb:`, `debian_family:`, `fedora_family:` are not OmniPackage config — they are YAML scratch space hosting anchors. The parser only reads `version_extractors:`, `builds:`, `repositories:`, `image_caches:`, `secrets:`, `ignore_source_files:`.
+- Per-distro entries can still override anything — a different `build_dependencies` list for one distro, a `before_build_script` only on older distros, and so on. Explicit keys win over merged ones.
+
+For a two-format project at scale (Qt5 vs. Qt6 splits, per-distro CMake flags), see [`mpz/.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml). For `before_build_script` on older distros only, see [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml).
+
+## Custom fields
+
+Any field on a build entry beyond the keys above lands in the [template context](https://docs.omnipackage.org/guides/templates/#custom-per-distro-variables) under the same name. This is the mechanism for per-distro variation that doesn't fit into `build_dependencies` or `runtime_dependencies` — CMake flags, environment exports, feature toggles. Values must be scalars (strings, bools, ints, floats); arrays and nested objects are not supported.
+
+```yaml
+- distro: "ubuntu_20.04"
+  build_dependencies: [curl, make, gcc-10]
+  ENV_EXPORTS: "export CC=gcc-10"
+  before_build_script: ".omnipackage/install_rust.sh"
+  <<: *deb
+```
+
+`{{ ENV_EXPORTS }}` expands inside the spec or `debian/rules` template to set up the right toolchain before the build. Distros that don't set `ENV_EXPORTS` get an empty string, so the same template works everywhere without `{% if %}` guards.
+
+# `version_extractors`
+
+A version extractor produces the version string stamped into the built package. At least one is required. `release` and `build` select one with `--version-extractor <name>`.
+
+## Providers
+
+### `file`
+
+Reads a file and applies a regex to extract the version.
+
+```yaml
+version_extractors:
+  - name: version_file
+    provider: file
+    file:
+      file: VERSION
+      regex: '^(.+)$'
+```
+
+### `shell`
+
+Runs a shell command; stdout (trimmed) is the version.
+
+```yaml
+version_extractors:
+  - name: git_tag
+    provider: shell
+    shell:
+      command: "git describe --tags --abbrev=0"
+```
+
+### `constant`
+
+Hardcoded version string.
+
+```yaml
+version_extractors:
+  - name: fixed
+    provider: constant
+    constant:
+      version: "1.0.0"
+```
+
+# `repositories`
+
+Each entry describes one publishing target. `publish` and `release` select one with `--repository <name>`; if omitted, the first entry is used.
+
+## Common keys
+
+| Key                      | Required | Description                                                                                     |
+| ------------------------ | -------- | ----------------------------------------------------------------------------------------------- |
+| `name`                   | yes      | Human-readable identifier; passed to `--repository`                                             |
+| `provider`               | yes      | `s3` or `localfs`                                                                               |
+| `gpg_private_key_base64` | yes      | Base64-wrapped ASCII-armored private key; normally `${GPG_KEY}`                                 |
+| `package_name`           | yes      | Package name rendered into the install page and used as the project slug under `path_in_bucket` |
+
+## Provider: `localfs`
+
+Writes the repository tree to a host directory. Useful for testing.
+
+```yaml
+- name: Local test
+  provider: localfs
+  localfs:
+    path: /tmp/omnipackage-repos
+  gpg_private_key_base64: "${GPG_KEY}"
+```
+
+## Provider: `s3`
+
+Uploads to an S3 bucket or any S3-compatible storage.
+
+| Key                    | Required | Description                                                                                 |
+| ---------------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `bucket`               | yes      | Bucket name                                                                                 |
+| `endpoint`             | yes      | Full S3 endpoint URL                                                                        |
+| `access_key_id`        | yes      | Usually `${...}` from env                                                                   |
+| `secret_access_key`    | yes      | Usually `${...}` from env                                                                   |
+| `region`               | no       | Region string; required by some providers                                                   |
+| `path_in_bucket`       | no       | Subdirectory prefix inside the bucket                                                       |
+| `bucket_public_url`    | no       | Public URL base used in the generated install page                                          |
+| `force_path_style`     | no       | Default `false`; set `true` for MinIO, some R2/B2 setups                                    |
+| `cloudflare_zone_id`   | no       | Zone ID to purge after upload. Requires `cloudflare_api_token`; either one alone is ignored |
+| `cloudflare_api_token` | no       | API token used for the purge. Requires `cloudflare_zone_id`                                 |
+
+See [Publishing to S3](https://docs.omnipackage.org/guides/s3_repository/index.md) for an end-to-end walkthrough.
+
+# `image_caches`
+
+Each build target pulls a container image. Image caches let you push prepared images (the distro base plus everything `setup` installs) to a registry — or store them locally — so subsequent builds start from the snapshot and skip `setup` entirely.
+
+The cache is populated by [`prime`](https://docs.omnipackage.org/cli/prime/index.md) and consumed by `build` / `publish` / `release` via `--image-cache <name>`. If the named cache is configured but not yet primed, the container runtime fails to pull it — run `prime` first.
+
+## Providers
+
+### `registry`
+
+Push cached images to any OCI-compatible container registry (GHCR, Docker Hub, GitLab Registry, self-hosted Harbor, …).
+
+```yaml
+image_caches:
+  - name: my-cache
+    provider: registry
+    image_tag: omnipackage-cache
+    registry:
+      url: ghcr.io
+      namespace: myorg
+      username: ${REGISTRY_USER}
+      password: ${REGISTRY_TOKEN}
+```
+
+The full image reference is `<url>/<namespace>/<distro_id>:<image_tag>`, e.g. `ghcr.io/myorg/fedora_42:omnipackage-cache`. One image per distro, with `image_tag` shared across all of them.
+
+### `local`
+
+Snapshot the image into the container runtime's local store. No registry, no push — for quick local iteration when you just want to skip `setup` on subsequent runs.
+
+```yaml
+image_caches:
+  - name: local
+    provider: local
+    image_tag: omnipackage-cache
+```
+
+## GitHub Container Registry (ghcr.io)
+
+GHCR is the most common CI target — free and tightly integrated with GitHub Actions — and also the most common source of credential confusion. Two cases:
+
+### From GitHub Actions: `GITHUB_TOKEN`
+
+Inside a workflow, the auto-injected `GITHUB_TOKEN` can push and pull from GHCR — no PAT required. The job must declare write access:
+
+```yaml
+permissions:
+  packages: write
+```
+
+(The default for modern repos is read-only — enough to pull but not push; `prime` fails without `write`.) In the workflow step, pass the values into `.env` so `${...}` substitution in `config.yml` can read them:
+
+```yaml
+- run: |
+    echo "GITHUB_REGISTRY_USERNAME=${{ github.actor }}" >> .env
+    echo "GITHUB_REGISTRY_PASSWORD=${{ secrets.GITHUB_TOKEN }}" >> .env
+    echo "GITHUB_REGISTRY_NAMESPACE=${{ github.repository_owner }}" >> .env
+```
+
+`GITHUB_TOKEN` is ephemeral — scoped to the workflow run, no rotation needed.
+
+### Outside Actions (local dev, other CI): Personal Access Token
+
+`GITHUB_TOKEN` only exists inside a GitHub Actions runner. To `prime` from your laptop or other CI, use a **classic Personal Access Token** with `write:packages` and `read:packages` scopes (fine-grained tokens do not currently cover GHCR — use classic). Create it at GitHub → Settings → Developer settings → Personal access tokens → **Tokens (classic)**, then paste it into your local `.env`:
+
+```sh
+GITHUB_REGISTRY_USERNAME=your-github-username
+GITHUB_REGISTRY_PASSWORD=ghp_xxxxxxxxxxxxxxxxxxxx
+GITHUB_REGISTRY_NAMESPACE=your-github-username   # or an org you have package-write on
+```
+
+The same env-var names work in both cases — only the source of the token differs.
+
+### `namespace`: org vs personal
+
+GHCR images are owned by either a GitHub user or an organization. `namespace` is whichever one owns the package:
+
+- Personal repo or personal-account `prime`: `namespace` is your GitHub username (`${{ github.repository_owner }}` resolves to this in personal-repo workflows).
+- Org-owned repo: `namespace` is the org name. The token (`GITHUB_TOKEN` or PAT) needs `packages: write` on the org's packages.
+
+For projects primed from both org-owned CI and contributor forks, declare two `image_caches:` entries — one per namespace — and select with `--image-cache <name>` at run time. [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml) does exactly this with `github` and `github_personal` entries.
+
+## Real-world references
+
+- [`mpz`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) — single `github` entry, primed monthly from GitHub Actions with `GITHUB_TOKEN`.
+- [`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml) — dual `github` / `github_personal` entries for org + contributor-fork workflows.
+
+The matching CI wiring (`refresh-omnipackage-cache.yml`, `permissions: packages: write`, the `.env`-writing step) is in the [CI/CD integration guide](https://docs.omnipackage.org/guides/cicd/#image-cache-priming).
+
+# `secrets`
+
+`secrets:` is a top-level map of name-to-value pairs that need to reach the build but must not appear in `config.yml`. Values typically come from `${...}` substitution so the literal value stays in `.env` or the process environment.
+
+```yaml
+secrets:
+  API_TOKEN: ${API_TOKEN}
+  SENTRY_DSN: ${SENTRY_DSN}
+```
+
+A typical use case is a build-time identifier the application needs baked in — Sentry's `SENTRY_DSN` is a common example. Not catastrophic if leaked, but it should not sit in version control, and the build needs to embed it into the binary or a config file shipped with the package.
+
+## Where secrets are visible
+
+Each entry in `secrets:` reaches the build through three independent paths.
+
+**1. Environment variables inside the build container.** Every entry is passed as `-e NAME=value`, so anything running inside the container — `before_build_script`, spec `%build` / `%install` scriptlets, `debian/rules` recipes, and anything they shell out to — sees them as ordinary env vars (`$API_TOKEN`, `$SENTRY_DSN`).
+
+**2. The Liquid template context.** Secrets are also exposed as a `secrets` object in the template scope:
+
+```liquid
+%post
+echo "SENTRY_DSN={{ secrets.SENTRY_DSN }}" >> /etc/my-app/sentry.env
+```
+
+Substitution happens at render time; the rendered spec / control file is written to disk in the build directory with the literal value embedded. That is fine for ephemeral CI runners, but **do not** template secrets into files that ship inside the package itself — anyone who downloads it can read them.
+
+**3. As `${...}` substitution targets in `config.yml`.** Strictly the same `${}` expansion any other env-sourced value uses; once a secret is referenced from `config.yml`, it is just a string in the parsed config. The `secrets:` block is what makes it cross into the container in step 1.
+
+## Log redaction
+
+Every value listed in `secrets:` is fed to the logger as a redaction term. Anything OmniPackage prints — its own progress lines, captured stdout/stderr from inside the container — runs through a substring replace that swaps each secret value for `[REDACTED]`. If a build script accidentally `echo`s `$API_TOKEN`, the captured line shows up as `[REDACTED]`.
+
+Two caveats:
+
+- **Redaction is plain substring replace, not regex or whole-token.** Short or non-unique secret values can match unrelated text in the log. Use long, unique values.
+- **Redaction only applies to OmniPackage's own log output.** Files written *into* the build (a rendered spec containing `{{ secrets.X }}`) keep the literal value — that is what makes them work. Treat the build directory the same way you would treat the GPG key on disk.
+
+## What gets logged at startup
+
+The job variables line at the top of each build shows only the **keys** of the `secrets:` map, never the values:
+
+```text
+starting build for fedora_42, variables: version=1.2.3 current_time_rfc2822=... secrets=[API_TOKEN, SENTRY_DSN]
+```
+
+Useful for confirming the right secrets are loaded without leaking them into CI logs.
+
+# `ignore_source_files`
+
+A list of patterns that exclude files and directories from the source tree before it gets staged into the build container. Applies equally to RPM and DEB builds.
+
+```yaml
+ignore_source_files:
+  - .git
+  - .env
+  - .DS_Store
+  - "*.log"
+  - /build
+  - /target
+  - node_modules
+```
+
+## What it does
+
+For each build, OmniPackage uses `rsync` to copy the project source into a working directory inside the container (`/root/rpmbuild/SOURCES/<name>/` for RPM, `/output/build/` for DEB). Each pattern in `ignore_source_files` is passed verbatim as `--exclude=<pattern>` to that rsync. Matching files never reach the container, never end up in the source tarball that ships inside the RPM, and never enter the `debuild` working tree.
+
+Two main uses:
+
+- **Keep build artefacts out of the package source.** Prior local builds (`/build`, `/dist`, `/target`, `node_modules`) bloat the staged tree and can confuse the in-container build by colliding with what it is about to produce.
+- **Keep secrets out as hygiene.** `.env` typically holds the GPG key, S3 credentials, and other `${...}` sources. The final `.rpm` / `.deb` only contains files explicitly installed by your spec / `debian/` recipes, so a stray `.env` in the staged tree will not ship to end users on its own — but it sits in the build container's working tree, available to anything the build script runs. That is a hazard if a script bakes it into a generated config or copies the source tree elsewhere. The init templates exclude `.env` for this reason; do the same when writing a config from scratch.
+
+## Pattern syntax
+
+Patterns are rsync exclude filters (not gitignore — close, but not identical):
+
+| Pattern     | Matches                                                              |
+| ----------- | -------------------------------------------------------------------- |
+| `name`      | Any file or directory called `name`, at any depth                    |
+| `/name`     | A file or directory called `name` only at the source root (anchored) |
+| `*.ext`     | Any file with that extension, at any depth (basename glob)           |
+| `dir/*.tmp` | `*.tmp` files directly inside any `dir/`                             |
+
+`*` does not cross `/` boundaries (standard rsync). Stick to the four shapes above; more elaborate patterns (`**`, character classes) are valid in rsync but inconsistent across versions, so best avoided for portability.
+
+## Defaults from `omnipackage init`
+
+`omnipackage init` writes a starter `ignore_source_files` matching the detected project type. Common to every type:
+
+```yaml
+- .git
+- .env
+- .DS_Store
+- "*.log"
+```
+
+Per-type additions:
+
+| Project type        | Adds                            |
+| ------------------- | ------------------------------- |
+| `rust`              | `/target`                       |
+| `cmake`, `cpp`, `c` | `/build`                        |
+| `electron`, `tauri` | `node_modules`, `/dist`, `/out` |
+| `ruby`              | `/vendor`, `/tmp`               |
+| `crystal`           | `/lib`, `/bin`                  |
+
+These are starting points — extend them as the project grows. Real-world examples: [`mpz`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) excludes `/build`; [`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml) excludes `/target`.
+# CLI reference
+
+# CLI reference
+
+OmniPackage ships a single binary, `omnipackage`, with several subcommands.
+
+## Commands
+
+| Command                                                        | Purpose                                                 |
+| -------------------------------------------------------------- | ------------------------------------------------------- |
+| [`init`](https://docs.omnipackage.org/cli/init/index.md)       | Scaffold `.omnipackage/` for a new project              |
+| [`build`](https://docs.omnipackage.org/cli/build/index.md)     | Build packages inside containers, don't publish         |
+| [`publish`](https://docs.omnipackage.org/cli/publish/index.md) | Upload already-built packages to a repository           |
+| [`release`](https://docs.omnipackage.org/cli/release/index.md) | `build` and `publish` in one pass per distro            |
+| [`prime`](https://docs.omnipackage.org/cli/prime/index.md)     | Pre-populate the image cache                            |
+| [`info`](https://docs.omnipackage.org/cli/info/index.md)       | Query project metadata (distros, install-page URL)      |
+| [`gpg`](https://docs.omnipackage.org/cli/gpg/index.md)         | Generate and convert signing keys                       |
+| [`portal`](https://docs.omnipackage.org/cli/portal/index.md)   | Open an interactive shell in a distro's build container |
+
+## Global options
+
+| Flag                           | Description |
+| ------------------------------ | ----------- |
+| \`--container-runtime \<docker | podman>\`   |
+
+If neither is set, `podman` is preferred when available, otherwise `docker`. The command fails if neither is in `$PATH`.
+
+## Environment variables
+
+| Variable                        | Effect                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `OMNIPACKAGE_CONTAINER_RUNTIME` | Same as `--container-runtime`; the flag takes precedence if both are set |
+| `NO_COLOR`                      | Disable ANSI colors in OmniPackage's own log output                      |
+
+## Common per-command flags
+
+Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
+
+| Flag                   | Default                                                          | Description                                                                                              |
+| ---------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `<project-dir>`        | `.` (current dir)                                                | Positional path to the project root                                                                      |
+| `--config-path <rel>`  | `.omnipackage/config.yml`                                        | Config path relative to the project dir                                                                  |
+| `--env-file <path>`    | `.env` (in project root)                                         | `.env` file for `${...}` substitution in `config.yml`                                                    |
+| `--distros <ids...>`   | **all distros configured in `builds:`**                          | Space-separated list of distro IDs to act on                                                             |
+| `--build-dir <path>`   | `$TMPDIR/omnipackage-build` (typically `/tmp/omnipackage-build`) | Where intermediate build artefacts go; per-distro subdirs live under here                                |
+| `--fail-fast`          | off (continue with remaining distros on error)                   | Stop on the first failing distro instead                                                                 |
+| `--image-cache <name>` | none (no cache, full setup runs every time)                      | Use a configured [image cache](https://docs.omnipackage.org/configuration/image_caches/index.md) by name |
+
+`--distros`, `--image-cache`, `--repository`, and `--version-extractor` also accept their first-letter short forms (`-d`, `-i`, `-r`, `-v`) on every command that takes them.
+
+## Common logging flags
+
+`build`, `publish`, `release`, and `prime` share these. OmniPackage's own progress logs always go to stdout; the flags below control output from the process running **inside** the container. The full container log is always written to disk under `--build-dir` regardless of these settings.
+
+| Flag                          | Default                                     | Description                                                                                                                                        |
+| ----------------------------- | ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| \`--container-output \<stderr | stdout                                      | null>\`                                                                                                                                            |
+| `--disable-container-echo`    | off (`set -x` enabled inside the container) | Quieter container output                                                                                                                           |
+| `--fail-log-lines <n>`        | `50`                                        | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise (output already went to the terminal live) |
+
+# `omnipackage build`
+
+Build packages for the distros defined in `.omnipackage/config.yml` without publishing. A successful run produces `.rpm` / `.deb` files under `--build-dir`, ready for [`publish`](https://docs.omnipackage.org/cli/publish/index.md).
+
+```text
+omnipackage build [project-dir] [flags]
+```
+
+`project-dir` defaults to `.` — `omnipackage build` from the project root is a complete invocation.
+
+## Flags
+
+Every flag has a default; the table shows the value used if the flag is omitted.
+
+| Flag                          | Default                              | Description                                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<project-dir>`               | `.`                                  | Project root                                                                                                                                                                                             |
+| `--config-path <rel>`         | `.omnipackage/config.yml`            | Config path relative to the project dir                                                                                                                                                                  |
+| `--env-file <path>`           | `.env`                               | Env file for `${...}` substitution in `config.yml`                                                                                                                                                       |
+| `--distros <ids...>`          | **all distros in `builds:`**         | Space-separated subset of distro IDs                                                                                                                                                                     |
+| `--build-dir <path>`          | `$TMPDIR/omnipackage-build`          | Where per-distro build subdirs live                                                                                                                                                                      |
+| `--fail-fast`                 | off                                  | Stop on the first failing distro                                                                                                                                                                         |
+| `--image-cache <name>`        | none                                 | Use a configured [image cache](https://docs.omnipackage.org/configuration/image_caches/index.md). Requires the cache to be primed first — see [`prime`](https://docs.omnipackage.org/cli/prime/index.md) |
+| `--version-extractor <name>`  | first entry in `version_extractors:` | Pick a [version extractor](https://docs.omnipackage.org/configuration/version_extractors/index.md) by name                                                                                               |
+| \`--container-output \<stderr | stdout                               | null>\`                                                                                                                                                                                                  |
+| `--disable-container-echo`    | off                                  | Disable `set -x` inside the container (less noisy output)                                                                                                                                                |
+| `--fail-log-lines <n>`        | `50`                                 | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise — output already went to the terminal live                                                       |
+
+## Notes
+
+- The build matrix is `--distros` (or all configured distros, if omitted) intersected with `builds:`. Each entry runs in its own container; one distro's failure does not affect the others unless `--fail-fast` is set.
+- Pass the same `--build-dir` to a follow-up [`publish`](https://docs.omnipackage.org/cli/publish/index.md) — `publish` reads the built artefacts from there.
+
+# `omnipackage publish`
+
+Upload already-built packages to a [repository](https://docs.omnipackage.org/configuration/repositories/index.md). Assumes [`omnipackage build`](https://docs.omnipackage.org/cli/build/index.md) ran first **with the same `--build-dir`** — `publish` reads the built `.rpm` / `.deb` artefacts from there and will not find them if the prior build wrote elsewhere. Use [`omnipackage release`](https://docs.omnipackage.org/cli/release/index.md) for build + publish in one pass without tracking the build dir.
+
+```text
+omnipackage publish [project-dir] [flags]
+```
+
+`project-dir` defaults to `.`.
+
+## Flags
+
+| Flag                           | Default                        | Description                                                                                             |
+| ------------------------------ | ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `<project-dir>`                | `.`                            | Project root                                                                                            |
+| `--config-path <rel>`          | `.omnipackage/config.yml`      | Config path relative to the project dir                                                                 |
+| `--env-file <path>`            | `.env`                         | Env file for `${...}` substitution in `config.yml`                                                      |
+| `--distros <ids...>`           | **all distros in `builds:`**   | Space-separated subset of distros to publish                                                            |
+| `--build-dir <path>`           | `$TMPDIR/omnipackage-build`    | Must match the `--build-dir` of the prior `build`                                                       |
+| `--fail-fast`                  | off                            | Stop on the first failing distro                                                                        |
+| `--image-cache <name>`         | none                           | Image cache to use for the repo-metadata generation containers (`createrepo_c`, `dpkg-scanpackages`)    |
+| `--repository <name>`          | first entry in `repositories:` | Which `repositories:` entry to publish to                                                               |
+| `--custom-install-page <path>` | built-in template              | Override the generated `install.html` template                                                          |
+| \`--container-output \<stderr  | stdout                         | null>\`                                                                                                 |
+| `--disable-container-echo`     | off                            | Disable `set -x` inside the container (less noisy output)                                               |
+| `--fail-log-lines <n>`         | `50`                           | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise |
+
+## What `publish` does
+
+For each distro:
+
+1. Starts a container with the distro-native repo-metadata tool (`createrepo_c` for RPM, `dpkg-scanpackages` for DEB).
+1. Adds the built artefact to the repo tree and signs the metadata with the GPG key from `repositories.gpg_private_key_base64`.
+1. Uploads the resulting tree to the configured backend (S3-compatible or local filesystem).
+1. Renders `install.html` with the four-line install snippet for that distro family and writes it next to the repo.
+
+# `omnipackage release`
+
+Build and publish in one pass per distro. The most common command in CI — most users only run `release`, not the separate `build` / `publish` pair.
+
+```text
+omnipackage release [project-dir] [flags]
+```
+
+`project-dir` defaults to `.`.
+
+`release` is not literally `build` followed by `publish`. For each distro it performs build + repo metadata generation + signing in a single container invocation, then uploads, then renders the install page. That is why `release` does not depend on a prior `--build-dir` (whereas `publish` does).
+
+## Flags
+
+The union of `build` and `publish` flags. Every flag has a default; the table shows the value used if the flag is omitted.
+
+| Flag                           | Default                              | Description                                                                                                |
+| ------------------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `<project-dir>`                | `.`                                  | Project root                                                                                               |
+| `--config-path <rel>`          | `.omnipackage/config.yml`            | Config path relative to the project dir                                                                    |
+| `--env-file <path>`            | `.env`                               | Env file for `${...}` substitution in `config.yml`                                                         |
+| `--distros <ids...>`           | **all distros in `builds:`**         | Space-separated subset of distros                                                                          |
+| `--build-dir <path>`           | `$TMPDIR/omnipackage-build`          | Where per-distro build subdirs live                                                                        |
+| `--fail-fast`                  | off                                  | Stop on the first failing distro                                                                           |
+| `--image-cache <name>`         | none                                 | Use a configured [image cache](https://docs.omnipackage.org/configuration/image_caches/index.md)           |
+| `--repository <name>`          | first entry in `repositories:`       | Which `repositories:` entry to publish to                                                                  |
+| `--version-extractor <name>`   | first entry in `version_extractors:` | Pick a [version extractor](https://docs.omnipackage.org/configuration/version_extractors/index.md) by name |
+| `--custom-install-page <path>` | built-in template                    | Override the generated `install.html` template                                                             |
+| \`--container-output \<stderr  | stdout                               | null>\`                                                                                                    |
+| `--disable-container-echo`     | off                                  | Disable `set -x` inside the container (less noisy output)                                                  |
+| `--fail-log-lines <n>`         | `50`                                 | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise    |
+
+## `release` vs. separate `build` + `publish`
+
+- **`release`** — the default. Everything happens in the same container per distro, so it is also faster than the two-step pair.
+- **`build` then `publish`** — useful for inspecting the artefact (install it locally, run a smoke test) before pushing to the repository, or for publishing the same artefact to multiple repositories without rebuilding.
+
+# `omnipackage info`
+
+Query project metadata without running a build. Useful in CI scripts — the JSON form of `--list-distros` drives the GitHub Actions matrix in the [CI/CD guide](https://docs.omnipackage.org/guides/cicd/index.md).
+
+```text
+omnipackage info [project-dir] [flags]
+```
+
+`project-dir` defaults to `.`. One of `--list-distros` or `--show-install-page-url` is required (otherwise nothing is printed).
+
+## Flags
+
+| Flag                      | Default                        | Description                                            |
+| ------------------------- | ------------------------------ | ------------------------------------------------------ |
+| `<project-dir>`           | `.`                            | Project root                                           |
+| `--config-path <rel>`     | `.omnipackage/config.yml`      | Config path relative to the project dir                |
+| `--env-file <path>`       | `.env`                         | Env file for `${...}` substitution in `config.yml`     |
+| `--list-distros`          | off                            | Print every `distro:` ID from `builds:`                |
+| `--show-install-page-url` | off                            | Print the URL where the install page will be published |
+| `--repository <name>`     | first entry in `repositories:` | Repository scoping for `--show-install-page-url`       |
+| \`--format \<plain        | json>\`                        | `plain`                                                |
+
+## Examples
+
+```sh
+# Plain list of distros, one per line
+omnipackage info . --list-distros
+
+# JSON array — for CI matrix generation
+omnipackage info . --list-distros --format json
+
+# Where the install page will land for the default repository
+omnipackage info . --show-install-page-url
+
+# ...for a specific repository
+omnipackage info . --show-install-page-url --repository "Linux packages - stable"
+```
+
+# `omnipackage gpg`
+
+Generate and convert GPG signing keys. See [Signing packages](https://docs.omnipackage.org/guides/signing/index.md) for the broader workflow (export from your existing keyring, passphrase requirements, etc.).
+
+## `gpg generate`
+
+Generate a new keypair and print the **private** key to stdout. The public key is derivable from it on demand, so OmniPackage stores only one.
+
+```text
+omnipackage gpg generate --name <name> --email <email> [--format pem|base64]
+```
+
+| Flag              | Default      | Description                |
+| ----------------- | ------------ | -------------------------- |
+| `--name <name>`   | — (required) | Key owner name (real name) |
+| `--email <email>` | — (required) | Key owner email            |
+| \`--format \<pem  | base64>\`    | `pem`                      |
+
+The generated key is RSA 4096-bit, no expiration, **no passphrase** (OmniPackage cannot use a passphrased key). Generation runs in an isolated `GNUPGHOME` — your real `~/.gnupg` is never touched.
+
+```sh
+# Typical: write directly into .env
+echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email you@example.com --format base64)" >> .env
+```
+
+## `gpg convert`
+
+Convert between `pem` and `base64` encodings of the same key.
+
+```text
+omnipackage gpg convert [<input>] [--input-format pem|base64] [--output-format pem|base64]
+```
+
+| Flag                    | Default   | Description                                                   |
+| ----------------------- | --------- | ------------------------------------------------------------- |
+| `<input>`               | stdin     | Positional path to the input key file. Reads stdin if omitted |
+| \`--input-format \<pem  | base64>\` | `pem`                                                         |
+| \`--output-format \<pem | base64>\` | `base64`                                                      |
+
+Always writes to stdout. The conversion is loss-free — decoding the `base64` form yields exactly the original `pem` block.
+
+```sh
+# pem (e.g. exported from your gpg keyring) → base64 for .env
+omnipackage gpg convert signing-key.asc
+
+# base64 from .env → pem for inspection or re-import
+echo "$GPG_KEY" | omnipackage gpg convert --input-format base64 --output-format pem | gpg --import
+```
+
+# `omnipackage portal`
+
+Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool when a build fails and you need to investigate — run the same `dnf install ...` / `apt-get install ...` lines `setup` would run, inspect the error, find the right package name, then update `config.yml`.
+
+```text
+omnipackage portal <distro> [flags]
+```
+
+`<distro>` is the distro ID, e.g. `fedora_42` or `debian_13`. See [Supported distros](https://docs.omnipackage.org/distros/index.md) for the full list.
+
+## Flags
+
+| Flag                 | Default                     | Description                                                                                                    |
+| -------------------- | --------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `<distro>`           | — (required)                | Distro ID                                                                                                      |
+| `--build-dir <path>` | `$TMPDIR/omnipackage-build` | Bind-mounted into the container at `/<basename-of-build-dir>` so you can move files between host and container |
+
+## What you get
+
+- The plain distro base image (e.g. `fedora:42`, `debian:trixie`) — **not** the post-`setup` snapshot. `portal` is for diagnosing setup, not skipping it.
+- An interactive `bash` shell as root.
+- `--build-dir` mounted at `/<basename>` (so `/tmp/omnipackage-build` becomes `/omnipackage-build` inside).
+- `--rm` semantics — the container is discarded on `exit`; no state persists between portal sessions.
+
+Finding the right package name for a `build_dependencies` entry:
+
+```sh
+omnipackage portal fedora_42
+# inside container:
+dnf install -y my-suspect-package
+# or
+dnf search my-keyword
+```
+
+# `omnipackage prime`
+
+Pre-populate the container [image cache](https://docs.omnipackage.org/configuration/image_caches/index.md) by running each distro's `setup` stage and snapshotting the result. Subsequent `build` / `release` runs start from the cached image and skip `setup` (the slow `apt-get install build-essential ...` / `dnf install rpmdevtools ...` step).
+
+```text
+omnipackage prime [project-dir] [flags]
+```
+
+`project-dir` defaults to `.`. Requires `image_caches:` to be configured — without it, `prime` errors out with `image_caches is missing`.
+
+## Flags
+
+| Flag                          | Default                        | Description                                                                                             |
+| ----------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `<project-dir>`               | `.`                            | Project root                                                                                            |
+| `--config-path <rel>`         | `.omnipackage/config.yml`      | Config path relative to the project dir                                                                 |
+| `--env-file <path>`           | `.env`                         | Env file for `${...}` substitution in `config.yml`                                                      |
+| `--distros <ids...>`          | **all distros in `builds:`**   | Space-separated subset to prime                                                                         |
+| `--build-dir <path>`          | `$TMPDIR/omnipackage-build`    | Where the per-distro temporary directories live                                                         |
+| `--fail-fast`                 | off                            | Stop on the first failing distro                                                                        |
+| `--image-cache <name>`        | first entry in `image_caches:` | Which image cache to populate                                                                           |
+| \`--container-output \<stderr | stdout                         | null>\`                                                                                                 |
+| `--disable-container-echo`    | off                            | Disable `set -x` inside the container (less noisy output)                                               |
+| `--fail-log-lines <n>`        | `50`                           | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise |
+
+## What `prime` does, per distro
+
+1. Pulls the distro base image.
+1. Runs the distro's `setup` and `setup_repo` commands inside a container, including any `before_build_script` from the build entry.
+1. Commits the resulting container as an image tagged `<distro_id>:<image_tag>`.
+1. For `provider: registry`, logs in and pushes the image. For `provider: local`, leaves it in the container runtime's local store only.
+
+## When to re-prime
+
+Re-prime when any input to `setup` changes, since the cached image will no longer reflect it:
+
+- The distro's published base image receives security updates (the typical reason for the monthly cron in the [CI/CD guide](https://docs.omnipackage.org/guides/cicd/#image-cache-priming)).
+- `build_dependencies` change in `config.yml`.
+- A `before_build_script` changes.
+- The toolchain installed by `setup` moves (e.g. a newer Rust via `install_rust.sh`).
+
+The first usually runs through the scheduled cron; the rest are triggered manually via `workflow_dispatch` after the relevant change lands.
+# Reference
+
+# Supported distros
+
+OmniPackage builds DEB and RPM packages for the distributions listed below. Each entry shows the distro ID used in `config.yml` (`builds[].distro`) and on the command line (`--distros <id>`).
+
+The list is fetched live from [`distros.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/src/distros.yml) and always reflects current support.
+
+## DEB-based
+
+## RPM-based
+
+## Architecture
+
+OmniPackage does not pass `--platform` to the container runtime, so builds run on the host's native architecture. All supported base images are multiarch (Mageia is the exception — x86_64 only upstream), so an ARM64 host produces ARM64 binaries without extra configuration.
+
+Repositories are per-architecture. Publishing for both `aarch64` and `x86_64` requires two independent sets of repos — each built on a host of the matching architecture, uploaded to its own bucket or path, and served through its own install page.
+
+# Examples
+
+Minimal single-purpose projects live in the [examples repo](https://github.com/omnipackage/examples), one per language/build-system combination: `c_makefile`, `crystal`, `electron`, `go`, `python`, `ruby`, `rust`, `tauri`, `c_with_secrets`. Each ships a ready-to-use `.omnipackage/config.yml` and a README.
+
+## Real-world projects
+
+Larger configs that exercise more of OmniPackage — many distros, per-distro overrides, GitHub Actions, signing, S3:
+
+### mpz
+
+[`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — a Qt desktop music player (C++/CMake). The [`.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) demonstrates:
+
+- **31 build targets** across openSUSE, Debian, Ubuntu, Fedora, AlmaLinux, RockyLinux, and Mageia.
+- **Per-distro Qt version split** via YAML anchors (`*debian_qt5` / `*debian_qt6`, `*readhat_qt5` / `*readhat_qt6`). Each anchor sets the right `build_dependencies` and, for Qt5, passes `CMAKE_EXTRA_CLI: "-DUSE_QT5=ON"`.
+- **`runtime_dependencies`** for Qt5 multimedia plugins on Debian-family distros.
+- **Two `version_extractors`**: a shell extractor producing `2.99~next.<timestamp>.<sha>` for the rolling channel, and a `file` extractor that pulls the stable version from `CMakeLists.txt` via regex.
+- **Custom RPM spec** (`mpz.spec.liquid`) and **DEB templates directory** (`.omnipackage/deb`).
+- **Cloudflare R2** with `cloudflare_zone_id` / `cloudflare_api_token` for cache purges after each publish.
+- Matching **GitHub Actions workflows** in [`.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) — the reference setup the [CI/CD guide](https://docs.omnipackage.org/guides/cicd/index.md) walks through.
+
+### omnipackage-rs
+
+[`omnipackage/omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) — OmniPackage built with itself. The [`.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml) addresses a different problem: shipping a Rust binary on distros whose packaged toolchain is too old.
+
+- **`before_build_script: .omnipackage/install_rust.sh`** on older distros (Debian 11/12, Ubuntu 20.04, openSUSE Leap, AlmaLinux, RockyLinux) installs a current toolchain via rustup before the build. Newer distros (Fedora 41+, openSUSE Tumbleweed) skip the script and use distro-packaged `rust` / `cargo`.
+- **Cross-format `runtime_dependencies`** — DEB pipe-OR `["podman | docker", "gpg"]` and RPM rich deps `["(podman or docker)", "gpg"]`. Same intent, different syntax.
+- **Per-distro `ENV_EXPORTS`** — Ubuntu 20.04 needs `export CC=gcc-10` because the default compiler is too old for some dependencies.
+- **Two `image_caches`** pointing at the same GHCR registry under different namespaces (org vs. personal) — for builds from forks or contributor accounts.
+- **`cargotoml` version extractor** reads the version directly from `Cargo.toml`.
+- Matching **GitHub Actions workflows** in [`.github/workflows`](https://github.com/omnipackage/omnipackage-rs/tree/master/.github/workflows). The shape mirrors mpz; the difference — an extra `bootstrap-binary` job that builds the binary from source — is specific to OmniPackage building itself.
+
+Either project is a reasonable starting point: copy mpz for many-distro setups with YAML anchors, copy omnipackage-rs for bootstrapping a toolchain inside the build container.
