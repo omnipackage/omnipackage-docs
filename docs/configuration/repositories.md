@@ -14,6 +14,7 @@ Each entry describes one publishing target. `publish` and `release` select one w
 | `provider` | yes | `s3` or `localfs` |
 | `gpg_private_key_base64` | yes | Base64-wrapped ASCII-armored private key; normally `${GPG_KEY}` |
 | `package_name` | yes | Package name rendered into the install page and used as the project slug under `path_in_bucket` |
+| `retain_packages` | no | Number of previously published packages kept per distro, on top of each new build. Default `0` keeps only the latest build. See [Package retention](#package-retention) |
 
 ## Provider: `localfs`
 
@@ -46,4 +47,25 @@ Uploads to an S3 bucket or any S3-compatible storage.
 
 See [Publishing to S3](../guides/s3_repository.md) for an end-to-end walkthrough.
 
-<!-- TODO: -->
+## Package retention
+
+`retain_packages` sets how many previously published packages are kept per distro, alongside the new build. With `retain_packages: 3`, each `publish`/`release` keeps the three most recent `.deb`/`.rpm` files per distro plus the one just built, and removes the rest. The default `0` keeps only the latest build.
+
+On each run, before uploading the new package:
+
+1. Existing packages are fetched from the target.
+2. The N most recent by modification time are kept; older ones are pruned.
+3. The new package is uploaded, metadata is regenerated, and pruned packages are deleted from the backend (bucket or local path).
+
+Counting is per distro and per package type, and includes nested subdirectories. Retained packages are not re-uploaded.
+
+```yaml
+- name: Releases
+  provider: s3
+  retain_packages: 3
+  s3:
+    bucket: my-bucket
+    endpoint: https://s3.example.com
+  gpg_private_key_base64: "${GPG_KEY}"
+  package_name: myapp
+```

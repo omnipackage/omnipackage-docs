@@ -23,6 +23,7 @@ omnipackage init [path] [flags]
 | `--email <addr>` | `git config user.email`, else `unknown@example.com` | Maintainer email |
 | `--homepage <url>` | manifest value, else `https://example.com` | Project homepage |
 | `--description <text>` | manifest value, else `<package> packaged with omnipackage` | Short package description |
+| `--retain-packages <n>` | `0` | Value written to every scaffolded `repositories:` entry; previously published packages kept per distro on top of each new build (`0` = only the latest). See [Package retention](../configuration/repositories.md#package-retention) |
 | `--force` | off | Overwrite existing files in `.omnipackage/` |
 | `--dry-run` | off | Print the planned files without writing |
 

@@ -14,6 +14,8 @@ omnipackage release [project-dir] [flags]
 
 `release` is not literally `build` followed by `publish`. For each distro it performs build + repo metadata generation + signing in a single container invocation, then uploads, then renders the install page. That is why `release` does not depend on a prior `--build-dir` (whereas `publish` does).
 
+Previously published packages are pruned per the repository's [`retain_packages`](../configuration/repositories.md#package-retention) setting before the upload.
+
 ## Flags
 
 The union of `build` and `publish` flags. Every flag has a default; the table shows the value used if the flag is omitted.

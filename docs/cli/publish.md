@@ -33,7 +33,8 @@ omnipackage publish [project-dir] [flags]
 
 For each distro:
 
-1. Starts a container with the distro-native repo-metadata tool (`createrepo_c` for RPM, `dpkg-scanpackages` for DEB).
-2. Adds the built artefact to the repo tree and signs the metadata with the GPG key from `repositories.gpg_private_key_base64`.
-3. Uploads the resulting tree to the configured backend (S3-compatible or local filesystem).
-4. Renders `install.html` with the four-line install snippet for that distro family and writes it next to the repo.
+1. Prunes previously published packages per the repository's [`retain_packages`](../configuration/repositories.md#package-retention) setting before uploading.
+2. Starts a container with the distro-native repo-metadata tool (`createrepo_c` for RPM, `dpkg-scanpackages` for DEB).
+3. Adds the built artefact to the repo tree and signs the metadata with the GPG key from `repositories.gpg_private_key_base64`.
+4. Uploads the resulting tree to the configured backend (S3-compatible or local filesystem).
+5. Renders `install.html` with the four-line install snippet for that distro family and writes it next to the repo.
