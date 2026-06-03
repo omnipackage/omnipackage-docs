@@ -32,6 +32,7 @@ If neither is set, `podman` is preferred when available, otherwise `docker`. The
 | Variable | Effect |
 |----------|--------|
 | `OMNIPACKAGE_CONTAINER_RUNTIME` | Same as `--container-runtime`; the flag takes precedence if both are set |
+| `OMNIPACKAGE_BUILD_DIR` | Same as `--build-dir`; the flag takes precedence if both are set. An empty string is treated as unset (falls back to the default) |
 | `NO_COLOR` | Disable ANSI colors in OmniPackage's own log output |
 
 ## Common per-command flags
@@ -44,7 +45,7 @@ Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`)
 | `--config-path <rel>` | `.omnipackage/config.yml` | Config path relative to the project dir |
 | `--env-file <path>` | `.env` (in project root) | `.env` file for `${...}` substitution in `config.yml` |
 | `--distros <ids...>` | **all distros configured in `builds:`** | Space-separated list of distro IDs to act on |
-| `--build-dir <path>` | `$TMPDIR/omnipackage-build` (typically `/tmp/omnipackage-build`) | Where intermediate build artefacts go; per-distro subdirs live under here |
+| `--build-dir <path>` | `$TMPDIR/omnipackage-build` (typically `/tmp/omnipackage-build`) | Where intermediate build artefacts go; per-distro subdirs live under here. Also settable via `OMNIPACKAGE_BUILD_DIR` |
 | `--fail-fast` | off (continue with remaining distros on error) | Stop on the first failing distro instead |
 | `--image-cache <name>` | none (no cache, full setup runs every time) | Use a configured [image cache](../configuration/image_caches.md) by name |
 
