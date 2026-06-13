@@ -1,5 +1,5 @@
 ---
-description: Recommended conventions for OmniPackage-built RPM and DEB packages — versioning, dependencies, signing, and repository layout.
+description: Recommended conventions for OmniPackage-built RPM, DEB, and pacman packages — versioning, dependencies, signing, and repository layout.
 ---
 
 # Best practices
@@ -19,7 +19,7 @@ Host a single project per OmniPackage repository. The generated install flow ass
 `install.html` ends in `apt install <your-package>` — one package, no ambiguity. Stacking unrelated projects into one bucket breaks that in one of two ways:
 
 - **Non-overlapping audiences.** Users who add your repo see package names they do not recognise. Every `apt search` hit becomes "what is this, and why is it on my system?" — the trust signal of a focused repo is gone.
-- **Overlapping audiences.** Users installing more than one of your projects hit a duplicate-source warning unless the install page for project B detects that project A's repo is already configured and skips the add step. Doing that portably across `apt` / `dnf` / `zypper` is extra shell logic the install snippet does not currently carry.
+- **Overlapping audiences.** Users installing more than one of your projects hit a duplicate-source warning unless the install page for project B detects that project A's repo is already configured and skips the add step. Doing that portably across `apt` / `dnf` / `zypper` / `pacman` is extra shell logic the install snippet does not currently carry.
 
 The install page is one-project-shaped as well — it names a single package in the final command, and supporting "add this repo, then pick from the list" is workable but not currently implemented. This may change in a future release; until then, keep one project per repository. The bucket itself can be shared — use a distinct [`path_in_bucket`](../configuration/repositories.md) per project to isolate each repo tree. Separate buckets work too but are not required.
 
@@ -56,7 +56,7 @@ In practice this is a narrow exception, not a blanket policy. Most of the depend
 
 When a distro's compiler or toolchain is too old, use [`before_build_script`](../configuration/builds.md): a shell script that runs inside the build container before the package build, typically to install a newer toolchain. Pulling a current Rust via `rustup`, installing a recent Node via `nvm`, dropping in a newer CMake from upstream — all fine. [`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) does this on older distros and uses distro-packaged Rust on newer ones.
 
-The key distinction: `before_build_script` provisions the **build environment**, not the **user's machine**. Anything it installs is discarded with the container after the build. The produced `.deb` / `.rpm` must still satisfy the rule above — every runtime dependency must come from the distro's standard repositories.
+The key distinction: `before_build_script` provisions the **build environment**, not the **user's machine**. Anything it installs is discarded with the container after the build. The produced `.deb` / `.rpm` / `.pkg.tar.zst` must still satisfy the rule above — every runtime dependency must come from the distro's standard repositories.
 
 So: use `before_build_script` freely for a modern toolchain. Do not use it to paper over a runtime dependency you cannot satisfy — that produces a package that builds and installs but fails to launch, because the build-time `libfoo` is not on the user's machine. If a runtime library is not in the distro's standard repos, static-link it (above) instead.
 
@@ -64,7 +64,7 @@ So: use `before_build_script` freely for a modern toolchain. Do not use it to pa
 
 `omnipackage release` succeeding means the package built and the repository signed cleanly. It does not mean the package *installs and runs* on a fresh system. Build hosts have headers, build tools, and prior dependency installations that production user machines do not. A package that depends on a `-devel` / `-dev` package by mistake, or that links a `before_build_script`-installed library, will build fine and fail on `apt install` (or at first launch) for the first user who tries it.
 
-[`omnipackage portal`](../cli/portal.md) provides the right environment: an interactive root shell in the plain distro base image, no `setup` applied, container discarded on `exit`. Open one per distro, add your published repo, run `apt install <your-package>` (or `dnf install` / `zypper install`), then run the binary — the snippet from your generated `install.html` is what to paste. Do this at least once per distro before announcing a release.
+[`omnipackage portal`](../cli/portal.md) provides the right environment: an interactive root shell in the plain distro base image, no `setup` applied, container discarded on `exit`. Open one per distro, add your published repo, run `apt install <your-package>` (or `dnf install` / `zypper install` / `pacman -S`), then run the binary — the snippet from your generated `install.html` is what to paste. Do this at least once per distro before announcing a release.
 
 ## Trust is in the developer, not the channel
 
@@ -72,4 +72,4 @@ A question worth answering up-front when shipping a third-party repository: "why
 
 The honest answer is that the trust decision is not about the distribution channel. Users trust *you* — the developer — or they do not. If they trust you, they will `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your repo. If they do not, none of those work either — the channel does not supply trust that was not already there.
 
-OmniPackage does not move the needle in either direction. It is open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only provides shims that drive the standard Linux packaging tools — `rpmbuild`, `debuild`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.
+OmniPackage does not move the needle in either direction. It is open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only provides shims that drive the standard Linux packaging tools — `rpmbuild`, `debuild`, `makepkg`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` / `.pkg.tar.zst` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.

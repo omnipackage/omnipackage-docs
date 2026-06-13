@@ -1,10 +1,10 @@
 ---
-description: Sign RPM and DEB packages and repository metadata with GPG — key generation, secret handling, and apt/dnf/zypper verification.
+description: Sign RPM, DEB, and pacman packages and repository metadata with GPG — key generation, secret handling, and apt/dnf/zypper/pacman verification.
 ---
 
 # Signing packages
 
-OmniPackage signs every published `.deb` / `.rpm` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM) with a GPG private key. End users import the matching public key once when they add the repository; `apt` / `dnf` / `zypper` reject any package or metadata file whose signature does not verify. The key is what makes a published repository trustable.
+OmniPackage signs every published `.deb` / `.rpm` / `.pkg.tar.zst` and the repository metadata (`Release` / `InRelease` for DEB, `repomd.xml` for RPM, the signed `.db.tar.gz` database plus a detached `.sig` per package for pacman) with a GPG private key. End users import the matching public key once when they add the repository; `apt` / `dnf` / `zypper` / `pacman` reject any package or metadata file whose signature does not verify. The key is what makes a published repository trustable.
 
 The key is referenced from `config.yml` as base64-wrapped ASCII armor, normally via `${GPG_KEY}` — substituted from a `.env` file (project root by default, override with `--env-file <path>`) or from the process environment.
 

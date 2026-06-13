@@ -1,5 +1,5 @@
 ---
-description: "`repositories` reference — publishing targets (S3-compatible storage, local paths) where the built DEB/RPM packages and repo metadata are uploaded."
+description: "`repositories` reference — publishing targets (S3-compatible storage, local paths) where the built DEB/RPM/pacman packages and repo metadata are uploaded."
 ---
 
 # `repositories`
@@ -49,7 +49,7 @@ See [Publishing to S3](../guides/s3_repository.md) for an end-to-end walkthrough
 
 ## Package retention
 
-`retain_packages` sets how many previously published packages are kept per distro, alongside the new build. With `retain_packages: 3`, each `publish`/`release` keeps the three most recent `.deb`/`.rpm` files per distro plus the one just built, and removes the rest. The default `0` keeps only the latest build.
+`retain_packages` sets how many previously published packages are kept per distro, alongside the new build. With `retain_packages: 3`, each `publish`/`release` keeps the three most recent `.deb`/`.rpm`/`.pkg.tar.zst` files per distro plus the one just built, and removes the rest. The default `0` keeps only the latest build.
 
 On each run, before uploading the new package:
 

@@ -1,5 +1,5 @@
 ---
-description: OmniPackage documentation — install, configure, and ship signed RPM and DEB packages from one YAML config. Guides, configuration reference, and full CLI docs.
+description: OmniPackage documentation — install, configure, and ship signed RPM, DEB, and pacman packages from one YAML config. Guides, configuration reference, and full CLI docs.
 ---
 
 <script type="application/ld+json">
@@ -10,7 +10,7 @@ description: OmniPackage documentation — install, configure, and ship signed R
   "url": "https://omnipackage.org",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Linux",
-  "description": "CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config.",
+  "description": "CLI for building and publishing signed RPM, DEB, and pacman packages to many Linux distributions from one YAML config.",
   "codeRepository": "https://github.com/omnipackage/omnipackage-rs",
   "documentation": "https://docs.omnipackage.org/",
   "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
@@ -19,7 +19,7 @@ description: OmniPackage documentation — install, configure, and ship signed R
 
 # OmniPackage documentation
 
-Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM and DEB packages to many Linux distributions from one YAML config. For the project overview and the "why", see [omnipackage.org](https://omnipackage.org/).
+Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM, DEB, and pacman packages to many Linux distributions from one YAML config. For the project overview and the "why", see [omnipackage.org](https://omnipackage.org/).
 
 ## Where to start
 
@@ -51,4 +51,4 @@ See [Examples](examples.md) for details.
 
 - [omnipackage.org](https://omnipackage.org/) — project landing page
 - [GitHub](https://github.com/omnipackage/omnipackage-rs) — source, issues, releases
-- [Install OmniPackage](https://repositories.omnipackage.org/omnipackage-rs/stable/install.html) — apt / dnf / zypper one-liners
+- [Install OmniPackage](https://repositories.omnipackage.org/omnipackage-rs/stable/install.html) — apt / dnf / zypper / pacman one-liners

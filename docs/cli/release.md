@@ -1,5 +1,5 @@
 ---
-description: "`omnipackage release` reference — build and publish RPM/DEB packages in one pass, the most common command in CI."
+description: "`omnipackage release` reference — build and publish RPM/DEB/pacman packages in one pass, the most common command in CI."
 ---
 
 # `omnipackage release`

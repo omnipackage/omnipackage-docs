@@ -1,10 +1,10 @@
 ---
-description: "`omnipackage build` reference — build RPM and DEB packages for the distros in config.yml without publishing."
+description: "`omnipackage build` reference — build RPM, DEB, and pacman packages for the distros in config.yml without publishing."
 ---
 
 # `omnipackage build`
 
-Build packages for the distros defined in `.omnipackage/config.yml` without publishing. A successful run produces `.rpm` / `.deb` files under `--build-dir`, ready for [`publish`](publish.md).
+Build packages for the distros defined in `.omnipackage/config.yml` without publishing. A successful run produces `.rpm` / `.deb` / `.pkg.tar.zst` files under `--build-dir`, ready for [`publish`](publish.md).
 
 ```
 omnipackage build [project-dir] [flags]

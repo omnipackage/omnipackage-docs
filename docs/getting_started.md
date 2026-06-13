@@ -1,5 +1,5 @@
 ---
-description: Install OmniPackage and build the bundled C example end-to-end — first signed RPM and DEB packages from one config.yml.
+description: Install OmniPackage and build the bundled C example end-to-end — first signed RPM, DEB, and pacman packages from one config.yml.
 ---
 
 # Getting started

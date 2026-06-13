@@ -4,7 +4,7 @@ description: "`omnipackage init` reference — scaffold `.omnipackage/` (config.
 
 # `omnipackage init`
 
-Scaffold `.omnipackage/` for a project that doesn't yet have one. Detects the project type from manifest files (`Cargo.toml`, `go.mod`, `package.json`, …), then writes a starter `config.yml`, an RPM `specfile.spec.liquid`, and the Debian `control` / `changelog` / `compat` / `rules` templates, all pre-filled with package name, maintainer, and version-extractor defaults.
+Scaffold `.omnipackage/` for a project that doesn't yet have one. Detects the project type from manifest files (`Cargo.toml`, `go.mod`, `package.json`, …), then writes a starter `config.yml`, an RPM `specfile.spec.liquid`, the Debian `control` / `changelog` / `compat` / `rules` templates, and a pacman `PKGBUILD.liquid`, all pre-filled with package name, maintainer, and version-extractor defaults.
 
 ```
 omnipackage init [path] [flags]
@@ -73,6 +73,7 @@ Under `<path>/.omnipackage/`:
 - `config.yml` — one `builds:` entry per distro family, with `setup`, `build`, and `install` blocks pre-filled for the project type.
 - `specfile.spec.liquid` — RPM spec template.
 - `deb/control.liquid`, `deb/changelog.liquid`, `deb/compat.liquid`, `deb/rules.liquid` — Debian source-package templates.
+- `PKGBUILD.liquid` — pacman build template (Arch, Manjaro).
 
 `--dry-run` prints the same list without writing. Run it first if you're unsure what `init` will touch.
 

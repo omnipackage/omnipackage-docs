@@ -1,10 +1,10 @@
 ---
-description: Turn an S3-compatible bucket (Cloudflare R2, AWS S3, MinIO) into a public DEB and RPM repository served over HTTPS.
+description: Turn an S3-compatible bucket (Cloudflare R2, AWS S3, MinIO) into a public DEB, RPM, and pacman repository served over HTTPS.
 ---
 
 # Publishing to S3
 
-End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM repository.
+End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM/pacman repository.
 
 If you do not already have a preference, **Cloudflare R2 is recommended** — it is the most-tested provider in this project, charges nothing for egress (so serving packages is free), and includes 10 GB of free storage.
 
@@ -156,7 +156,7 @@ Field notes:
 
 ### 5. CDN cache purge (optional)
 
-Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. Without purging, stale repo metadata (`Release`, `Packages.gz`, `repodata/`) can be served until TTL expires.
+Custom-subdomain R2 traffic flows through Cloudflare's edge, which caches `GET` responses. Without purging, stale repo metadata (`Release`, `Packages.gz`, `repodata/`, the pacman `.db.tar.gz`) can be served until TTL expires.
 
 If both `cloudflare_zone_id` and `cloudflare_api_token` are set, OmniPackage purges the affected URL prefix after each upload. They are treated as a pair — if either is missing, the purge step is skipped silently. A purge failure logs a warning but does not fail the publish.
 

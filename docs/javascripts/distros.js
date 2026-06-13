@@ -1,7 +1,8 @@
 (async () => {
   const debContainer = document.getElementById('supported-distros-deb');
   const rpmContainer = document.getElementById('supported-distros-rpm');
-  if (!debContainer && !rpmContainer) return;
+  const pacmanContainer = document.getElementById('supported-distros-pacman');
+  if (!debContainer && !rpmContainer && !pacmanContainer) return;
 
   const SOURCE_URL = 'https://raw.githubusercontent.com/omnipackage/omnipackage-rs/master/src/distros.yml';
   const REPO_URL = 'https://github.com/omnipackage/omnipackage-rs/blob/master/src/distros.yml';
@@ -14,6 +15,8 @@
     ubuntu: 'Ubuntu',
     fedora: 'Fedora',
     mageia: 'Mageia',
+    arch: 'Arch Linux',
+    manjaro: 'Manjaro',
   };
 
   const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({
@@ -77,6 +80,7 @@
 
   setLoading(debContainer);
   setLoading(rpmContainer);
+  setLoading(pacmanContainer);
 
   try {
     const res = await fetch(SOURCE_URL, { cache: 'no-cache' });
@@ -86,12 +90,15 @@
 
     const deb = distros.filter((d) => d.package_type === 'deb');
     const rpm = distros.filter((d) => d.package_type === 'rpm');
+    const pacman = distros.filter((d) => d.package_type === 'pacman');
 
     if (debContainer) debContainer.innerHTML = renderTable(deb);
     if (rpmContainer) rpmContainer.innerHTML = renderTable(rpm);
+    if (pacmanContainer) pacmanContainer.innerHTML = renderTable(pacman);
   } catch (err) {
     setError(debContainer);
     setError(rpmContainer);
+    setError(pacmanContainer);
     console.error('Failed to load distros.yml:', err);
   }
 })();

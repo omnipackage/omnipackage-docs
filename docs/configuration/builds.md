@@ -1,5 +1,5 @@
 ---
-description: "`builds` reference — per-target entries that define one RPM or DEB package build per Linux distribution."
+description: "`builds` reference — per-target entries that define one RPM, DEB, or pacman package build per Linux distribution."
 ---
 
 # `builds`
@@ -11,7 +11,7 @@ Each entry in `builds:` defines one package build for one target distro. A proje
 | Key | Required | Description |
 |-----|----------|-------------|
 | `distro` | yes | Distro ID — see [Supported distros](../distros.md). Unknown IDs are silently skipped at build time |
-| `package_name` | yes | Name of the resulting `.rpm` / `.deb` |
+| `package_name` | yes | Name of the resulting `.rpm` / `.deb` / `.pkg.tar.zst` |
 | `maintainer` | yes | `Name <email>` — used in the spec/control `Maintainer:` field and changelog entries |
 | `homepage` | yes | Project URL — written into the spec `URL:` and DEB `Homepage:` fields |
 | `description` | yes | Short package description |
@@ -20,9 +20,10 @@ Each entry in `builds:` defines one package build for one target distro. A proje
 | `before_build_script` | no | Path (relative to source dir) to a shell script run inside the container before the package build, e.g. to install a toolchain that isn't in the distro repos |
 | `rpm.spec_template` | RPM only | Path (relative to source dir) to a `.spec.liquid` file. Required for RPM-format distros |
 | `deb.debian_templates` | DEB only | Path (relative to source dir) to a directory of `debian/*.liquid` files. Required for DEB-format distros |
+| `pacman.pkgbuild_template` | pacman only | Path (relative to source dir) to a `PKGBUILD.liquid` file. Required for pacman-format distros (Arch, Manjaro) |
 | *(custom fields)* | no | Arbitrary scalar values (string, bool, int, float — not arrays or objects) passed straight into the template context. See [Templates](../guides/templates.md#custom-per-distro-variables) |
 
-`rpm:` and `deb:` blocks are not a per-build override of a default — only the block matching the distro's package format is consulted, so each build entry needs the one for its format. Both are usually defined once via a YAML anchor (see below) rather than repeated.
+`rpm:`, `deb:`, and `pacman:` blocks are not a per-build override of a default — only the block matching the distro's package format is consulted, so each build entry needs the one for its format. They are usually defined once via a YAML anchor (see below) rather than repeated.
 
 Unknown top-level keys in `config.yml` are silently ignored, which is what lets the anchor pattern below work cleanly.
 
@@ -74,6 +75,12 @@ deb: &deb
   deb:
     debian_templates: ".omnipackage/deb"
 
+pacman: &pacman
+  <<: *common
+  build_dependencies: [gcc, make, cmake]
+  pacman:
+    pkgbuild_template: ".omnipackage/PKGBUILD.liquid"
+
 debian_family: &debian_family
   build_dependencies: [build-essential, cmake]
   <<: *deb
@@ -93,6 +100,10 @@ builds:
     <<: *fedora_family
   - distro: "almalinux_9"
     <<: *fedora_family
+  - distro: "arch"
+    <<: *pacman
+  - distro: "manjaro"
+    <<: *pacman
 ```
 
 Syntax notes:
@@ -100,10 +111,11 @@ Syntax notes:
 - `&name` defines an anchor; `*name` references it.
 - `<<:` is YAML's merge key — it copies every key from the referenced mapping into the current one. Keys defined explicitly on the entry override merged values.
 - Anchors chain transitively: `*debian_family` merges `*deb`, which merges `*common`, so each `builds` entry inherits everything up the chain.
-- The top-level keys `common:`, `rpm:`, `deb:`, `debian_family:`, `fedora_family:` are not OmniPackage config — they are YAML scratch space hosting anchors. The parser only reads `version_extractors:`, `builds:`, `repositories:`, `image_caches:`, `secrets:`, `ignore_source_files:`.
+- The top-level keys `common:`, `rpm:`, `deb:`, `pacman:`, `debian_family:`, `fedora_family:` are not OmniPackage config — they are YAML scratch space hosting anchors. The parser only reads `version_extractors:`, `builds:`, `repositories:`, `image_caches:`, `secrets:`, `ignore_source_files:`.
+- Arch and Manjaro share one `*pacman` anchor — same package format, same package names, both rolling — so no per-distro split is needed.
 - Per-distro entries can still override anything — a different `build_dependencies` list for one distro, a `before_build_script` only on older distros, and so on. Explicit keys win over merged ones.
 
-For a two-format project at scale (Qt5 vs. Qt6 splits, per-distro CMake flags), see [`mpz/.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml). For `before_build_script` on older distros only, see [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml).
+For a multi-format project at scale (Qt5 vs. Qt6 splits, per-distro CMake flags), see [`mpz/.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml). For `before_build_script` on older distros only, see [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml).
 
 ## Custom fields
 

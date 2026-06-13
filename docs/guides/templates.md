@@ -1,10 +1,10 @@
 ---
-description: Liquid templates for the RPM `.spec` file and DEB `debian/` control files — available context, per-distro values, and shared snippets.
+description: Liquid templates for the RPM `.spec` file, DEB `debian/` control files, and pacman `PKGBUILD` — available context, per-distro values, and shared snippets.
 ---
 
 # Templates
 
-OmniPackage renders the RPM `.spec` file and the DEB `debian/` control files from [Liquid](https://shopify.github.io/liquid/) templates. This page covers what's available in the template context and how to thread per-distro values into a single shared template.
+OmniPackage renders the RPM `.spec` file, the DEB `debian/` control files, and the pacman `PKGBUILD` from [Liquid](https://shopify.github.io/liquid/) templates. This page covers what's available in the template context and how to thread per-distro values into a single shared template.
 
 ## Why template
 
@@ -22,10 +22,14 @@ rpm:
 
 deb:
   debian_templates: ".omnipackage/deb"
+
+pacman:
+  pkgbuild_template: ".omnipackage/PKGBUILD.liquid"
 ```
 
 - **RPM**: a single file ending in `.liquid`. The rendered output goes into the rpmbuild tree as the spec file.
 - **DEB**: a directory. Every file inside ending in `.liquid` is rendered (the `.liquid` suffix is stripped: `control.liquid` → `control`). Files without `.liquid` are copied verbatim — useful for `compat`, license files, scripts, etc.
+- **pacman**: a single file ending in `.liquid`. The rendered output is the `PKGBUILD` that `makepkg` builds (Arch, Manjaro) — a normal PKGBUILD with `build()` / `package()` functions.
 
 A typical DEB tree contains `control.liquid`, `changelog.liquid`, `rules.liquid`, and `compat.liquid`. See the [`c_makefile` example]({{ examples_github_url }}/tree/master/c_makefile/.omnipackage/deb) for a complete minimal set.
 
@@ -46,7 +50,7 @@ Every template renders with these in scope:
 | `build_dependencies` | array of strings | From the build entry |
 | `runtime_dependencies` | array of strings | From the build entry |
 | `secrets` | object (string → string) | From the `secrets:` block; access as `{{ secrets.MY_KEY }}` |
-| `source_folder_name` | string | RPM only — name of the staged source tarball directory |
+| `source_folder_name` | string | RPM and pacman — name of the staged source tarball directory (the pacman source is `{{ source_folder_name }}.tar.gz`) |
 
 Arrays render with the Liquid `join` filter:
 

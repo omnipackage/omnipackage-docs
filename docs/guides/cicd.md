@@ -1,5 +1,5 @@
 ---
-description: Run `omnipackage release` from CI — GitHub Actions matrix, image-cache strategies, and the recommended release flow for signed RPM/DEB pipelines.
+description: Run `omnipackage release` from CI — GitHub Actions matrix, image-cache strategies, and the recommended release flow for signed RPM/DEB/pacman pipelines.
 ---
 
 # CI/CD integration

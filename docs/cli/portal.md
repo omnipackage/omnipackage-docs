@@ -4,13 +4,13 @@ description: "`omnipackage portal` reference — open an interactive shell insid
 
 # `omnipackage portal`
 
-Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool when a build fails and you need to investigate — run the same `dnf install ...` / `apt-get install ...` lines `setup` would run, inspect the error, find the right package name, then update `config.yml`.
+Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool when a build fails and you need to investigate — run the same `dnf install ...` / `apt-get install ...` / `pacman -Syu ...` lines `setup` would run, inspect the error, find the right package name, then update `config.yml`.
 
 ```
 omnipackage portal <distro> [flags]
 ```
 
-`<distro>` is the distro ID, e.g. `fedora_42` or `debian_13`. See [Supported distros](../distros.md) for the full list.
+`<distro>` is the distro ID, e.g. `fedora_42`, `debian_13`, or `arch`. See [Supported distros](../distros.md) for the full list.
 
 ## Flags
 
@@ -21,7 +21,7 @@ omnipackage portal <distro> [flags]
 
 ## What you get
 
-- The plain distro base image (e.g. `fedora:42`, `debian:trixie`) — **not** the post-`setup` snapshot. `portal` is for diagnosing setup, not skipping it.
+- The plain distro base image (e.g. `fedora:42`, `debian:trixie`, `archlinux:latest`) — **not** the post-`setup` snapshot. `portal` is for diagnosing setup, not skipping it.
 - An interactive `bash` shell as root.
 - `--build-dir` mounted at `/<basename>` (so `/tmp/omnipackage-build` becomes `/omnipackage-build` inside).
 - `--rm` semantics — the container is discarded on `exit`; no state persists between portal sessions.

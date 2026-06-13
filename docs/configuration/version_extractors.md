@@ -1,5 +1,5 @@
 ---
-description: "`version_extractors` reference — strategies that produce the version string stamped into each built RPM/DEB package."
+description: "`version_extractors` reference — strategies that produce the version string stamped into each built RPM/DEB/pacman package."
 ---
 
 # `version_extractors`
