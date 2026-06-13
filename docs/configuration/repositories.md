@@ -18,7 +18,7 @@ Each entry describes one publishing target. `publish` and `release` select one w
 
 ## Provider: `localfs`
 
-Writes the repository tree to a host directory. Useful for testing.
+Writes the repository tree to a host directory instead of a bucket — the same standard repo, no S3 required. Useful for testing, same-machine installs, and self-hosting.
 
 ```yaml
 - name: Local test
@@ -27,6 +27,8 @@ Writes the repository tree to a host directory. Useful for testing.
     path: /tmp/omnipackage-repos
   gpg_private_key_base64: "${GPG_KEY}"
 ```
+
+See [Publishing to a local directory](../guides/localfs_repository.md) for what gets written and how to serve it.
 
 ## Provider: `s3`
 

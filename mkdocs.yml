@@ -11,6 +11,7 @@ nav:
       - "How it works": guides/how_it_works.md
       - "Signing packages": guides/signing.md
       - "Publishing to S3": guides/s3_repository.md
+      - "Publishing to a local directory": guides/localfs_repository.md
       - Templates: guides/templates.md
       - "CI/CD integration": guides/cicd.md
       - "Best practices": guides/best_practices.md
@@ -96,6 +97,7 @@ plugins:
           - guides/how_it_works.md: "Architecture overview — how the CLI orchestrates rpmbuild/debuild/createrepo_c/gpg/podman."
           - guides/signing.md: "GPG key generation, storing the key as a secret, and signing RPM/DEB packages and repository metadata."
           - guides/s3_repository.md: "Publishing the built repository to S3-compatible storage (AWS S3, Cloudflare R2, MinIO)."
+          - guides/localfs_repository.md: "Publishing the built repository to a local directory with the localfs provider — for testing, same-machine installs, and self-hosting. S3 is not required."
           - guides/templates.md: "Liquid templating for the RPM .spec and DEB control files — per-distro values and shared snippets."
           - guides/cicd.md: "Running OmniPackage in CI/CD — GitHub Actions matrix, caching, and the recommended release flow."
           - guides/best_practices.md: "Recommended patterns for production package pipelines."

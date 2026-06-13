@@ -1,0 +1,63 @@
+---
+description: Publish to a local directory with the localfs provider — the same signed DEB/RPM/pacman repo tree S3 produces, written to a path instead of a bucket. S3 is not required.
+---
+
+# Publishing to a local directory
+
+S3 is not mandatory. The `localfs` provider writes the same signed repository tree to a directory on the host instead of uploading it to a bucket. The output is a standard DEB/RPM/pacman repository, identical to what an S3 target produces.
+
+Use it to:
+
+- inspect exactly what `publish` generates,
+- install on the same machine without any server,
+- self-host behind a web server or shared mount you already run.
+
+## Configuration
+
+```yaml
+- name: Local
+  provider: localfs
+  gpg_private_key_base64: "${GPG_KEY}"
+  package_name: "sample-project"
+  localfs:
+    path: "${HOME}/sample-project-repo"
+```
+
+`path` is the only `localfs` key. Environment placeholders such as `${HOME}` are expanded from the [env file](../configuration/secrets.md). The directory is created if it does not exist.
+
+## What gets written
+
+Each distro lands in its own subdirectory named by [distro id](../distros.md), with the package, the signed native repo metadata, and the public key. The generated install page sits at the root:
+
+```
+sample-project-repo/
+├── install.html
+├── fedora_42/
+│   ├── sample-project.repo
+│   ├── repodata/
+│   └── sample-project-1.0-1.x86_64.rpm
+├── debian_12/
+│   └── stable/
+│       ├── Release
+│       ├── Release.key
+│       ├── Packages.gz
+│       └── sample-project_1.0_amd64.deb
+└── arch/
+    ├── public.key
+    ├── sample-project.db.tar.gz
+    └── sample-project-1.0-1-x86_64.pkg.tar.zst
+```
+
+## Inspect and install locally
+
+Open `install.html` in a browser for the per-distro install snippets. Because `localfs` has no public URL, the snippets point at `path` on disk, so they work as-is for installing on the same machine.
+
+## Self-hosting
+
+The directory is a complete, standard repository. To serve it over the network, point any static web server (nginx, Caddy, `python -m http.server`) at `path`, or place it on an NFS/SMB share. Package managers consume it like any other repo.
+
+The generated `install.html` links use the on-disk `path`, not your server's URL, so for a networked repo give consumers the repository URL directly. If you want a turnkey public repo with a matching install page, an S3-compatible backend is simpler — including self-hosted [MinIO](s3_repository.md), which speaks the same S3 API. See [Publishing to S3](s3_repository.md).
+
+## Retention
+
+[`retain_packages`](../configuration/repositories.md#package-retention) works the same as for S3: each `publish`/`release` keeps the N most recent packages per distro plus the new build and prunes the rest from `path`.
