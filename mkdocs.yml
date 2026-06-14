@@ -13,8 +13,10 @@ nav:
       - "Publishing to S3": guides/s3_repository.md
       - "Publishing to a local directory": guides/localfs_repository.md
       - Templates: guides/templates.md
+      - "Build recipes": guides/build_recipes.md
       - "CI/CD integration": guides/cicd.md
       - "Best practices": guides/best_practices.md
+      - Troubleshooting: guides/troubleshooting.md
   - Configuration:
       - Overview: configuration/index.md
       - builds: configuration/builds.md
@@ -99,8 +101,10 @@ plugins:
           - guides/s3_repository.md: "Publishing the built repository to S3-compatible storage (AWS S3, Cloudflare R2, MinIO)."
           - guides/localfs_repository.md: "Publishing the built repository to a local directory with the localfs provider — for testing, same-machine installs, and self-hosting. S3 is not required."
           - guides/templates.md: "Liquid templating for the RPM .spec and DEB control files — per-distro values and shared snippets."
+          - guides/build_recipes.md: "Build patterns for tricky projects — CMake/Qt, Electron, pacman — plus the Qt6 dependency map, patching staged source, and package verification."
           - guides/cicd.md: "Running OmniPackage in CI/CD — GitHub Actions matrix, caching, and the recommended release flow."
           - guides/best_practices.md: "Recommended patterns for production package pipelines."
+          - guides/troubleshooting.md: "Diagnosing OmniPackage build failures — missing deps, unpackaged files, link/OOM errors, per-distro package-name lookup."
         Configuration:
           - configuration/index.md: "config.yml top-level keys and overall structure."
           - configuration/builds.md: "builds — per-distro build target definitions."
