@@ -37,6 +37,7 @@ nav:
       - prime: cli/prime.md
   - "Supported distros": distros.md
   - Examples: examples.md
+  - "Use with AI agents": ai_agents.md
 
 extra:
   agent_github_url: https://github.com/omnipackage/omnipackage-rs/
