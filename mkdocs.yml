@@ -39,6 +39,9 @@ nav:
   - Examples: examples.md
   - "Use with AI agents": ai_agents.md
 
+copyright: >
+  For LLMs: <a href="/llms.txt">llms.txt</a> · <a href="/llms-full.txt">llms-full.txt</a>
+
 extra:
   agent_github_url: https://github.com/omnipackage/omnipackage-rs/
   examples_github_url: https://github.com/omnipackage/examples
