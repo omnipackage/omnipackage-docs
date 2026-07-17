@@ -80,7 +80,6 @@ theme:
 
   features:
     - content.code.copy
-    - content.code.annotate
     - search.suggest
     - search.highlight
     - search.share
@@ -134,9 +133,7 @@ extra_css:
   - stylesheets/extra.css
 
 markdown_extensions:
-  - abbr
   - admonition
-  - footnotes
   - pymdownx.highlight:
       anchor_linenums: true
       line_spans: __span
@@ -147,7 +144,3 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-  - pymdownx.inlinehilite
-  - pymdownx.snippets
-  - pymdownx.details
-  - fenced_code
