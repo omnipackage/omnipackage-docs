@@ -91,7 +91,6 @@ plugins:
   - social
   - search
   - privacy
-  - git-revision-date-localized
   - macros
   - llmstxt:
       markdown_description: "OmniPackage is a CLI that drives standard Linux packaging tools (rpmbuild, debuild, createrepo_c, dpkg-scanpackages, gpg, podman/docker) from a single YAML config, so one project repo can ship signed RPM and DEB packages to many distros from a single `release` command."
