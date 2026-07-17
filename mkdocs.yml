@@ -46,6 +46,7 @@ extra:
   agent_github_url: https://github.com/omnipackage/omnipackage-rs/
   examples_github_url: https://github.com/omnipackage/examples
   agent_public_install_url: https://repositories.omnipackage.org/omnipackage-rs/stable/install.html
+  agent_public_install_aarch64_url: https://repositories.omnipackage.org/omnipackage-rs/stable-aarch64/install.html
 
 theme:
   name: material

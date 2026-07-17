@@ -10,7 +10,7 @@ Install the CLI and build the bundled C example end-to-end.
 
 Options:
 
-1. [OmniPackage repositories]({{ agent_public_install_url }}) — recommended
+1. OmniPackage repositories — recommended: [x86_64]({{ agent_public_install_url }}) · [aarch64]({{ agent_public_install_aarch64_url }})
 2. [AUR](https://aur.archlinux.org/packages/omnipackage) — Arch alternative, e.g. `yay -S omnipackage`
 3. [Source]({{ agent_github_url }}) — requires Rust 1.85+ (2024 edition)
 

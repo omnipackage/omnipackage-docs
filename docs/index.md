@@ -51,4 +51,4 @@ See [Examples](examples.md) for details.
 
 - [omnipackage.org](https://omnipackage.org/) — project landing page
 - [GitHub](https://github.com/omnipackage/omnipackage-rs) — source, issues, releases
-- [Install OmniPackage](https://repositories.omnipackage.org/omnipackage-rs/stable/install.html) — apt / dnf / zypper / pacman one-liners
+- Install OmniPackage — apt / dnf / zypper / pacman one-liners: [x86_64]({{ agent_public_install_url }}) · [aarch64]({{ agent_public_install_aarch64_url }})
