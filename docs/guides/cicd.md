@@ -29,7 +29,7 @@ Every job needs the `omnipackage` binary. Preferred — the GitHub Action:
 - uses: omnipackage/omnipackage-rs@stable   # @master for master builds
 ```
 
-Ubuntu runners only; CPU architecture (x86_64 / aarch64) auto-detected. The channel is the pinned ref: `@stable` or `@master`. The workflows below use this.
+Ubuntu runners only; CPU architecture (x86_64 / aarch64) auto-detected. The channel comes from the pinned ref: `@master` installs the master channel; any other ref, including a version tag, installs the latest stable. The action has one output, `version`. The workflows below use this.
 
 Alternative — add the apt repository directly. Use it on non-GitHub CI, or to pin an exact channel:
 

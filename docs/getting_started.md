@@ -12,7 +12,7 @@ Options:
 
 1. OmniPackage repositories — recommended: [x86_64]({{ agent_public_install_url }}) · [aarch64]({{ agent_public_install_aarch64_url }})
 2. [AUR](https://aur.archlinux.org/packages/omnipackage) — Arch alternative, e.g. `yay -S omnipackage`
-3. [Source]({{ agent_github_url }}) — requires Rust 1.85+ (2024 edition)
+3. [Source]({{ agent_github_url }}) — requires Rust 1.95+
 
 Verify:
 
@@ -48,7 +48,7 @@ omnipackage release .
 
 The build log streams for each distro in `.omnipackage/config.yml`.
 
-The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `install.html` there in a browser for copy-paste install instructions per distro. The directory also holds `install.sh`, which detects the machine's distro and installs in one step, and `install.json` with the same data for automation. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
+The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `install.html` there in a browser for copy-paste install instructions per distro. The directory also holds `install.sh`, which detects the machine's distro and installs in one step, and `install.json` with the same data for automation (see [Install page](guides/install_page.md)). The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
 
 ## Next steps
 

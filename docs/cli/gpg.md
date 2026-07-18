@@ -16,8 +16,8 @@ omnipackage gpg generate --name <name> --email <email> [--format pem|base64]
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--name <name>` | — (required) | Key owner name (real name) |
-| `--email <email>` | — (required) | Key owner email |
+| `-n, --name <name>` | — (required) | Key owner name (real name) |
+| `-e, --email <email>` | — (required) | Key owner email |
 | `--format <pem|base64>` | `pem` | `pem` is multi-line ASCII armor; `base64` is the same content base64-encoded into one line, suitable for `.env` and CI secrets |
 
 The generated key is RSA 4096-bit, no expiration, **no passphrase** (OmniPackage cannot use a passphrased key). Generation runs in an isolated `GNUPGHOME` — your real `~/.gnupg` is never touched.
@@ -38,8 +38,8 @@ omnipackage gpg convert [<input>] [--input-format pem|base64] [--output-format p
 | Flag | Default | Description |
 |------|---------|-------------|
 | `<input>` | stdin | Positional path to the input key file. Reads stdin if omitted |
-| `--input-format <pem|base64>` | `pem` | Format of the input |
-| `--output-format <pem|base64>` | `base64` | Format of the output |
+| `-i, --input-format <pem|base64>` | `pem` | Format of the input |
+| `-o, --output-format <pem|base64>` | `base64` | Format of the output |
 
 Always writes to stdout. The conversion is loss-free — decoding the `base64` form yields exactly the original `pem` block.
 

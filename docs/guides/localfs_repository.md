@@ -27,7 +27,7 @@ Use it to:
 
 ## What gets written
 
-Each distro lands in its own subdirectory named by [distro id](../distros.md), with the package, the signed native repo metadata, and the public key. The generated install page and its sibling files sit at the root:
+Each distro lands in its own subdirectory named by [distro id](../distros.md), with the package, the signed native repo metadata, and the public key. The generated [install page](install_page.md) and its sibling files sit at the root:
 
 ```
 sample-project-repo/

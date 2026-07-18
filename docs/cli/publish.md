@@ -24,7 +24,7 @@ omnipackage publish [project-dir] [flags]
 | `--fail-fast` | off | Stop on the first failing distro |
 | `--image-cache <name>` | none | Image cache to use for the repo-metadata generation containers (`createrepo_c`, `dpkg-scanpackages`, `repo-add`) |
 | `--repository <name>` | first entry in `repositories:` | Which `repositories:` entry to publish to |
-| `--custom-install-page <path>` | built-in template | Override the generated `install.html` template |
+| `--custom-install-page <path>` | built-in template | Override the generated `install.html` template. See [Custom install page](../guides/install_page.md#custom-install-page) |
 | `--container-output <stderr|stdout|null>` | `stderr` | Where output from the process running inside the container is **printed to the terminal**. `null` means nothing is printed. OmniPackage's own logs always go to stdout. The full container log is **always** written to disk under `--build-dir` regardless |
 | `--disable-container-echo` | off | Disable `set -x` inside the container (less noisy output) |
 | `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise |
@@ -37,4 +37,4 @@ For each distro:
 2. Starts a container with the distro-native repo-metadata tool (`createrepo_c` for RPM, `dpkg-scanpackages` for DEB, `repo-add` for pacman).
 3. Adds the built artefact to the repo tree and signs the metadata with the GPG key from `repositories.gpg_private_key_base64`.
 4. Uploads the resulting tree to the configured backend (S3-compatible or local filesystem).
-5. Renders `install.html` with the four-line install snippet for that distro family and writes it next to the repo.
+5. Renders the [install page files](../guides/install_page.md) (`install.html`, `install.sh`, `install.json`, `badge.svg`) and writes them at the repo root.

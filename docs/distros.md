@@ -24,7 +24,7 @@ The authoritative source is [`distros.yml`](https://github.com/omnipackage/omnip
 | openSUSE Tumbleweed | `opensuse_tumbleweed` |
 | AlmaLinux | `almalinux_8`, `almalinux_9`, `almalinux_10` |
 | Rocky Linux | `rockylinux_8`, `rockylinux_9`, `rockylinux_10` |
-| Mageia | `mageia_9`, `mageia_cauldron` |
+| Mageia | `mageia_9`, `mageia_10`, `mageia_cauldron` |
 
 ## Pacman-based
 

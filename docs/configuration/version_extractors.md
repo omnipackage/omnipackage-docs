@@ -4,7 +4,7 @@ description: "`version_extractors` reference — strategies that produce the ver
 
 # `version_extractors`
 
-A version extractor produces the version string stamped into the built package. At least one is required. `release` and `build` select one with `--version-extractor <name>`.
+A version extractor produces the version string stamped into the built package. At least one is required. `release` and `build` select one with `--version-extractor <name>`; the first entry is the default.
 
 ## Providers
 
@@ -45,4 +45,6 @@ version_extractors:
       version: "1.0.0"
 ```
 
-<!-- TODO: notes on error handling when a regex doesn't match / command fails -->
+## Failure behavior
+
+An extractor failure stops the command. `file` fails when the file cannot be read, the regex is invalid, or the regex does not match; the regex runs over the whole file, and the version is capture group 1 of the first match. `shell` fails when the command exits nonzero; it runs via `sh -c` in the project directory.

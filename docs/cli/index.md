@@ -37,13 +37,13 @@ If neither is set, `podman` is preferred when available, otherwise `docker`. The
 
 ## Common per-command flags
 
-Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`) accept the same project- and job-level flags. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
+The project flags (`<project-dir>`, `--config-path`, `--env-file`) apply to `build`, `publish`, `release`, `prime`, and `info`. The job flags (the rest of the table) apply to the same commands except `info`. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `<project-dir>` | `.` (current dir) | Positional path to the project root |
 | `--config-path <rel>` | `.omnipackage/config.yml` | Config path relative to the project dir |
-| `--env-file <path>` | `.env` (in project root) | `.env` file for `${...}` substitution in `config.yml` |
+| `--env-file <path>` | `.env` | `.env` file for `${...}` substitution in `config.yml`. Relative paths resolve from the current directory, not `<project-dir>` |
 | `--distros <ids...>` | **all distros configured in `builds:`** | Space-separated list of distro IDs to act on |
 | `--build-dir <path>` | `$TMPDIR/omnipackage-build` (typically `/tmp/omnipackage-build`) | Where intermediate build artefacts go; per-distro subdirs live under here. Also settable via `OMNIPACKAGE_BUILD_DIR` |
 | `--fail-fast` | off (continue with remaining distros on error) | Stop on the first failing distro instead |

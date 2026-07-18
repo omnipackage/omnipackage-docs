@@ -12,6 +12,7 @@ nav:
       - "Signing packages": guides/signing.md
       - "Publishing to S3": guides/s3_repository.md
       - "Publishing to a local directory": guides/localfs_repository.md
+      - "Install page": guides/install_page.md
       - Templates: guides/templates.md
       - "Build recipes": guides/build_recipes.md
       - "CI/CD integration": guides/cicd.md
@@ -103,6 +104,7 @@ plugins:
           - guides/signing.md: "GPG key generation, storing the key as a secret, and signing RPM/DEB packages and repository metadata."
           - guides/s3_repository.md: "Publishing the built repository to S3-compatible storage (AWS S3, Cloudflare R2, MinIO)."
           - guides/localfs_repository.md: "Publishing the built repository to a local directory with the localfs provider — for testing, same-machine installs, and self-hosting. S3 is not required."
+          - guides/install_page.md: "Generated install files — install.html, install.sh, install.json, badge.svg — and custom install page templates."
           - guides/templates.md: "Liquid templating for the RPM .spec and DEB control files — per-distro values and shared snippets."
           - guides/build_recipes.md: "Build patterns for tricky projects — CMake/Qt, Electron, pacman — plus the Qt6 dependency map, patching staged source, and package verification."
           - guides/cicd.md: "Running OmniPackage in CI/CD — GitHub Actions matrix, caching, and the recommended release flow."
@@ -118,6 +120,7 @@ plugins:
           - configuration/ignore_source_files.md: "ignore_source_files — patterns excluded from the source tree before staging."
         CLI reference:
           - cli/index.md: "Overview of the omnipackage CLI subcommands."
+          - cli/init.md: "omnipackage init — scaffold .omnipackage/ config templates for a new project."
           - cli/build.md: "omnipackage build — build packages without publishing."
           - cli/publish.md: "omnipackage publish — publish already-built packages to a repository."
           - cli/release.md: "omnipackage release — build and publish in one step."
@@ -128,6 +131,7 @@ plugins:
         Reference:
           - distros.md: "Supported DEB/RPM distributions and their distro IDs."
           - examples.md: "Real-world projects and one-per-language minimal templates."
+          - ai_agents.md: "Using OmniPackage from AI agents — Claude Code plugin/skill and llms.txt endpoints."
 
 extra_css:
   - stylesheets/extra.css

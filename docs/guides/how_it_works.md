@@ -37,7 +37,7 @@ flowchart TD
     - Signs the resulting `.rpm` / `.deb` / `.pkg.tar.zst` with the configured GPG key. The same key signs packages and repo metadata.
     - Builds repo metadata with the distro-native tool — `createrepo_c` for RPM, `dpkg-scanpackages` for DEB, `repo-add` for pacman.
     - Uploads the signed packages and metadata to S3 (or any S3-compatible store: R2, GCS, B2, MinIO; see [`s3_repository`](s3_repository.md)).
-    - Generates the install page (`install.html`) and, next to it, `install.sh` — a one-line installer that auto-detects the user's distro — and `install.json`, the same per-distro data in machine-readable form for automation.
+    - Generates the [install page](install_page.md) (`install.html`) and, next to it, `install.sh` — a one-line installer that auto-detects the user's distro — and `install.json`, the same per-distro data in machine-readable form for automation.
 
 `omnipackage prime` is separate from this flow: it pre-runs the distro setup commands and snapshots the container image to a registry, so later releases skip the slow `apt-get install build-essential` phase. See [`image_caches`](../configuration/image_caches.md).
 

@@ -240,6 +240,6 @@ podman run --rm -v "$DEB":/p.deb:ro,Z debian:13 bash -c \
   'apt-get update -qq && apt-get install -y ./p.deb && QT_QPA_PLATFORM=offscreen timeout 6 myapp 2>&1 | grep -i "not a type\|not installed" && echo BROKEN || echo OK'
 ```
 
-See also [Best practices → Test the installed package](best_practices.md) and [`omnipackage portal`](../cli/portal.md).
+See also [Best practices → Test the installed package](best_practices.md#test-the-installed-package-not-just-the-build) and [`omnipackage portal`](../cli/portal.md).
 
 {% endraw %}

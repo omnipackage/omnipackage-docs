@@ -21,7 +21,7 @@ Every package is built in a clean per-distro container, so problems that never a
 | `add_subdirectory … does not contain a CMakeLists.txt`, empty `libs/<sub>` | Git submodules weren't initialized; the working tree is staged verbatim. | `git submodule update --init --recursive` before building (recursive matters for nested submodules). |
 | `unzip: not found` (or another tool) mid-build, but local builds are fine | A bundled dep's build step shells out to a helper present on one base image but not another. | Add the tool to `build_dependencies` for every family. |
 | Local `cmake`/`make` succeeds but the container build fails | The container lacks packages your machine has (private headers, newer Qt). | Expected — always validate with a real `omnipackage build`, not a local configure. |
-| Build host reboots or processes are OOM-killed | Concurrent builds and/or full `--parallel` exhaust RAM (Qt is heavy). | Build one distro at a time locally; keep parallelism for CI. |
+| Build host reboots or processes are OOM-killed | Concurrent builds and/or full `make -j`/`cmake --build --parallel` exhaust RAM (Qt is heavy). | Build one distro at a time locally; keep parallelism for CI. |
 | `dpkg: command not found` when inspecting a `.deb` | The build host isn't Debian. | Read the `.deb` with `ar`+`tar` — see [Verifying a built package](build_recipes.md#verifying-a-built-package). |
 | `bogus date in %changelog` (rpm) | The weekday doesn't match the date. | Use a real weekday (`date -d 2026-06-01 +%a`). |
 | Dependency install 404s on an end-of-life release | Archived base-image repos no longer resolve. | Drop EOL distros from `builds:`. |
