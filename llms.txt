@@ -1,0 +1,52 @@
+# OmniPackage documentation
+
+> Reference, guides, and CLI docs for OmniPackage — build signed RPM and DEB packages for multiple Linux distros from one YAML config.
+
+OmniPackage is a CLI that drives standard Linux packaging tools (rpmbuild, debuild, createrepo_c, dpkg-scanpackages, gpg, podman/docker) from a single YAML config, so one project repo can ship signed RPM and DEB packages to many distros from a single `release` command.
+
+## Getting started
+
+- [Home](https://docs.omnipackage.org/index.md): Documentation home — what OmniPackage is, links into the rest of the site.
+- [Getting started](https://docs.omnipackage.org/getting_started/index.md): Install the CLI and build the bundled C example end-to-end.
+
+## Guides
+
+- [How it works](https://docs.omnipackage.org/guides/how_it_works/index.md): Architecture overview — how the CLI orchestrates rpmbuild/debuild/createrepo_c/gpg/podman.
+- [Signing packages](https://docs.omnipackage.org/guides/signing/index.md): GPG key generation, storing the key as a secret, and signing RPM/DEB packages and repository metadata.
+- [Publishing to S3](https://docs.omnipackage.org/guides/s3_repository/index.md): Publishing the built repository to S3-compatible storage (AWS S3, Cloudflare R2, MinIO).
+- [Publishing to a local directory](https://docs.omnipackage.org/guides/localfs_repository/index.md): Publishing the built repository to a local directory with the localfs provider — for testing, same-machine installs, and self-hosting. S3 is not required.
+- [Install page](https://docs.omnipackage.org/guides/install_page/index.md): Generated install files — install.html, install.sh, install.json, badge.svg — and custom install page templates.
+- [Templates](https://docs.omnipackage.org/guides/templates/index.md): Liquid templating for the RPM .spec and DEB control files — per-distro values and shared snippets.
+- [Build recipes](https://docs.omnipackage.org/guides/build_recipes/index.md): Build patterns for tricky projects — CMake/Qt, Electron, pacman — plus the Qt6 dependency map, patching staged source, and package verification.
+- [CI/CD integration](https://docs.omnipackage.org/guides/cicd/index.md): Running OmniPackage in CI/CD — GitHub Actions matrix, caching, and the recommended release flow.
+- [Best practices](https://docs.omnipackage.org/guides/best_practices/index.md): Recommended patterns for production package pipelines.
+- [Troubleshooting](https://docs.omnipackage.org/guides/troubleshooting/index.md): Diagnosing OmniPackage build failures — missing deps, unpackaged files, link/OOM errors, per-distro package-name lookup.
+
+## Configuration
+
+- [Overview](https://docs.omnipackage.org/configuration/index.md): config.yml top-level keys and overall structure.
+- [builds](https://docs.omnipackage.org/configuration/builds/index.md): builds — per-distro build target definitions.
+- [version_extractors](https://docs.omnipackage.org/configuration/version_extractors/index.md): version_extractors — strategies for stamping the package version.
+- [repositories](https://docs.omnipackage.org/configuration/repositories/index.md): repositories — publishing targets (S3-compatible, local, etc.).
+- [image_caches](https://docs.omnipackage.org/configuration/image_caches/index.md): image_caches — pre-built container images that skip setup on every build.
+- [secrets](https://docs.omnipackage.org/configuration/secrets/index.md): secrets — passing values into the build without committing them.
+- [ignore_source_files](https://docs.omnipackage.org/configuration/ignore_source_files/index.md): ignore_source_files — patterns excluded from the source tree before staging.
+
+## CLI reference
+
+- [Overview](https://docs.omnipackage.org/cli/index.md): Overview of the omnipackage CLI subcommands.
+- [init](https://docs.omnipackage.org/cli/init/index.md): omnipackage init — scaffold .omnipackage/ config templates for a new project.
+- [build](https://docs.omnipackage.org/cli/build/index.md): omnipackage build — build packages without publishing.
+- [publish](https://docs.omnipackage.org/cli/publish/index.md): omnipackage publish — publish already-built packages to a repository.
+- [release](https://docs.omnipackage.org/cli/release/index.md): omnipackage release — build and publish in one step.
+- [info](https://docs.omnipackage.org/cli/info/index.md): omnipackage info — query project metadata; JSON output drives CI matrices.
+- [gpg](https://docs.omnipackage.org/cli/gpg/index.md): omnipackage gpg — generate and inspect signing keys.
+- [portal](https://docs.omnipackage.org/cli/portal/index.md): omnipackage portal — open an interactive shell inside the build container for debugging.
+- [prime](https://docs.omnipackage.org/cli/prime/index.md): omnipackage prime — populate image caches.
+
+## Reference
+
+- [Supported distros](https://docs.omnipackage.org/distros/index.md): Supported DEB/RPM distributions and their distro IDs.
+- [Examples](https://docs.omnipackage.org/examples/index.md): Real-world projects and one-per-language minimal templates.
+- [Use with AI agents](https://docs.omnipackage.org/ai_agents/index.md): Using OmniPackage from AI agents — Claude Code plugin/skill and llms.txt endpoints.
+
