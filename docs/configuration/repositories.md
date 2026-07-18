@@ -16,7 +16,7 @@ Each entry describes one publishing target. `publish` and `release` select one w
 | `package_name` | yes | Package name rendered into the install page and used as the project slug under `path_in_bucket` |
 | `retain_packages` | no | Number of previously published packages kept per distro, on top of each new build. Default `0` keeps only the latest build. See [Package retention](#package-retention) |
 
-Extra keys on a repository entry pass through as template variables for the [custom install page](../guides/install_page.md#custom-install-page), mirroring [custom fields](builds.md#custom-fields) on build entries.
+Extra keys on a repository entry pass through as template variables for the [custom install page](../guides/install_page.md#custom-install-page), like [custom fields](builds.md#custom-fields) on build entries.
 
 ## Provider: `localfs`
 
@@ -65,7 +65,7 @@ Counting is per distro and per package type, and includes nested subdirectories.
 
 ## Concurrent publishes
 
-The [install page files](../guides/install_page.md) (`install.html`, `install.sh`, `install.json`, `badge.svg`) are written with conditional puts when the S3 endpoint supports them (probed automatically) and retried on conflict; endpoints without support fall back to last-writer-wins with a warning. The native repo metadata (`repodata/`, `Packages.gz`, the pacman db) has no such protection, so run publishes to the same repository one at a time. In GitHub Actions, use a [`concurrency` group](../guides/cicd.md#the-shared-workflow) keyed on repository and distro.
+The [install page files](../guides/install_page.md) are updated with conditional writes, retried on conflict, when the S3 endpoint supports `If-Match` (probed automatically); otherwise last writer wins, with a warning. Repo metadata (`repodata/`, `Packages.gz`, the pacman db) has no such protection: run publishes to the same repository one at a time. In GitHub Actions, use a [`concurrency` group](../guides/cicd.md#the-shared-workflow).
 
 ```yaml
 - name: Releases

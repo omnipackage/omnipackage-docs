@@ -37,7 +37,7 @@ If neither is set, `podman` is preferred when available, otherwise `docker`. The
 
 ## Common per-command flags
 
-The project flags (`<project-dir>`, `--config-path`, `--env-file`) apply to `build`, `publish`, `release`, `prime`, and `info`. The job flags (the rest of the table) apply to the same commands except `info`. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
+The project flags (`<project-dir>`, `--config-path`, `--env-file`) apply to `build`, `publish`, `release`, `prime`, and `info`. The job flags (the rest of the table) apply to all of them except `info`. Every flag has a default — most invocations only need `<project-dir>`, which itself defaults to the current directory.
 
 | Flag | Default | Description |
 |------|---------|-------------|

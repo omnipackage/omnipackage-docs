@@ -47,4 +47,4 @@ version_extractors:
 
 ## Failure behavior
 
-An extractor failure stops the command. `file` fails when the file cannot be read, the regex is invalid, or the regex does not match; the regex runs over the whole file, and the version is capture group 1 of the first match. `shell` fails when the command exits nonzero; it runs via `sh -c` in the project directory.
+An extractor failure stops the command. `file` fails when the file cannot be read or the regex is invalid or does not match; the regex runs over the whole file, and the version is capture group 1 of the first match. `shell` runs via `sh -c` in the project directory and fails on a nonzero exit.
