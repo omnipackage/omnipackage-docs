@@ -27,11 +27,14 @@ Use it to:
 
 ## What gets written
 
-Each distro lands in its own subdirectory named by [distro id](../distros.md), with the package, the signed native repo metadata, and the public key. The generated install page sits at the root:
+Each distro lands in its own subdirectory named by [distro id](../distros.md), with the package, the signed native repo metadata, and the public key. The generated install page and its sibling files sit at the root:
 
 ```
 sample-project-repo/
-├── install.html
+├── install.html      # human-facing install page
+├── install.sh        # one-line installer, detects the distro
+├── install.json      # per-distro data, machine-readable
+├── badge.svg         # repo status badge
 ├── fedora_42/
 │   ├── sample-project.repo
 │   ├── repodata/
@@ -50,7 +53,7 @@ sample-project-repo/
 
 ## Inspect and install locally
 
-Open `install.html` in a browser for the per-distro install snippets. Because `localfs` has no public URL, the snippets point at `path` on disk, so they work as-is for installing on the same machine.
+Open `install.html` in a browser for the per-distro install snippets, or run `install.sh` to detect the distro and install in one step; `install.json` carries the same data for scripts. Because `localfs` has no public URL, the snippets point at `path` on disk, so they work as-is for installing on the same machine.
 
 ## Self-hosting
 

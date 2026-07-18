@@ -48,7 +48,7 @@ omnipackage release .
 
 The build log streams for each distro in `.omnipackage/config.yml`.
 
-The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
+The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The same directory also holds `install.sh` — run it to detect this machine's distro and install in one step — and `install.json`, the same data machine-readable for automation. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
 
 ## Next steps
 
