@@ -21,6 +21,27 @@ When-to-release lives in the trigger wrappers; how-to-release lives in the share
 
 The split is optional — a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you do not need and call the pipeline directly.
 
+### Installing the CLI
+
+Every job needs the `omnipackage` binary. Preferred — the GitHub Action:
+
+```yaml
+- uses: omnipackage/omnipackage-rs@stable   # @master for master builds
+```
+
+Ubuntu runners only; CPU architecture (x86_64 / aarch64) auto-detected. The channel is the pinned ref: `@stable` or `@master`. The workflows below use this.
+
+Alternative — add the apt repository directly. Use it on non-GitHub CI, or to pin an exact channel:
+
+```yaml
+- name: Install omnipackage
+  run: |
+    echo 'deb https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04 stable/' | sudo tee /etc/apt/sources.list.d/omnipackage_omnipackage.list
+    curl -fsSL https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04/stable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/omnipackage_omnipackage.gpg > /dev/null
+    sudo apt-get update
+    sudo apt-get install omnipackage
+```
+
 ### The shared workflow
 
 `_omnipackage.yml` takes two inputs and runs two jobs:
@@ -43,12 +64,7 @@ jobs:
     outputs:
       distros: ${{ steps.get-distros.outputs.distros }}
     steps:
-      - name: Install omnipackage
-        run: |
-          echo 'deb https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04 stable/' | sudo tee /etc/apt/sources.list.d/omnipackage_omnipackage.list
-          curl -fsSL https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04/stable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/omnipackage_omnipackage.gpg > /dev/null
-          sudo apt-get update
-          sudo apt-get install omnipackage
+      - uses: omnipackage/omnipackage-rs@stable
       - uses: actions/checkout@v6
       - id: get-distros
         run: echo "distros=$(omnipackage info --list-distros . --format json)" >> "$GITHUB_OUTPUT"
@@ -64,12 +80,7 @@ jobs:
       matrix:
         distro: ${{ fromJson(needs.list-distros.outputs.distros) }}
     steps:
-      - name: Install omnipackage
-        run: |
-          echo 'deb https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04 stable/' | sudo tee /etc/apt/sources.list.d/omnipackage_omnipackage.list
-          curl -fsSL https://repositories.omnipackage.org/omnipackage-rs/master/ubuntu_24.04/stable/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/omnipackage_omnipackage.gpg > /dev/null
-          sudo apt-get update
-          sudo apt-get install omnipackage
+      - uses: omnipackage/omnipackage-rs@stable
       - uses: actions/checkout@v6
       - run: echo "${{ secrets.OMNIPACKAGE_DOTENV }}" > .env
       - run: omnipackage release . --build-dir $RUNNER_TEMP --repository "${{ inputs.repository }}" --distros "${{ matrix.distro }}" --version-extractor "${{ inputs.version_extractor }}" --image-cache github
@@ -158,9 +169,7 @@ jobs:
       matrix:
         distro: ${{ fromJson(needs.list-distros.outputs.distros) }}
     steps:
-      - name: Install omnipackage
-        run: |
-          # same as _omnipackage.yml
+      - uses: omnipackage/omnipackage-rs@stable
       - uses: actions/checkout@v6
       - run: echo "${{ secrets.OMNIPACKAGE_DOTENV }}" > .env
       - run: omnipackage prime . --image-cache github --distros "${{ matrix.distro }}"
