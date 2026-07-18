@@ -37,7 +37,7 @@ echo "GPG_KEY=$(omnipackage gpg generate --name 'Your Name' --email you@example.
 What the command does:
 
 - Generates an RSA 4096-bit keypair with no expiration date.
-- Does **not** set a passphrase — required, since the build runs unattended in CI with no interactive prompt.
+- Sets no passphrase: the build runs unattended, with no interactive prompt.
 - Prints only the private key. The public key is derived from it on every publish, so you do not need to track them separately.
 - Runs in a temporary, isolated `GNUPGHOME`; your real `~/.gnupg` is never touched.
 
@@ -79,7 +79,7 @@ The result is a multi-line `-----BEGIN PGP PRIVATE KEY BLOCK-----` block.
 ### 4. Convert to base64 and put it in `.env`
 
 ```sh
-echo "GPG_KEY=$(omnipackage gpg convert --input signing-key.asc --input-format pem --output-format base64)" >> .env
+echo "GPG_KEY=$(omnipackage gpg convert signing-key.asc)" >> .env
 rm signing-key.asc
 ```
 
@@ -97,14 +97,14 @@ Delete `signing-key.asc` once it is in `.env` — no reason to keep two copies o
 Why base64? ASCII-armored PGP keys contain newlines, and newlines do not survive `.env` files, GitHub Actions secrets (the multi-line case works but is fragile), or shell `export VAR=...`. Base64 collapses the whole thing into a single line of `[A-Za-z0-9+/=]`, which round-trips cleanly through every layer between your laptop and the build container.
 
 ```sh
-# pem → base64 (typical: prepare for .env)
-omnipackage gpg convert --input signing-key.asc --input-format pem --output-format base64
+# pem → base64 (typical: prepare for .env); pem in, base64 out are the defaults
+omnipackage gpg convert signing-key.asc
 
 # base64 → pem (typical: inspect or re-import)
-omnipackage gpg convert --input key.b64 --input-format base64 --output-format pem | gpg --import
+omnipackage gpg convert key.b64 --input-format base64 --output-format pem | gpg --import
 
 # stdin works too
 cat signing-key.asc | omnipackage gpg convert --input-format pem --output-format base64
 ```
 
-The conversion is loss-free — the same bytes in a different envelope. Decoding the base64 form yields exactly the original ASCII-armored block.
+The conversion is loss-free: decoding the base64 form yields exactly the original ASCII-armored block.

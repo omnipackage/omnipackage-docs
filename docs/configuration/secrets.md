@@ -12,7 +12,7 @@ secrets:
   SENTRY_DSN: ${SENTRY_DSN}
 ```
 
-A typical use case is a build-time identifier the application needs baked in — Sentry's `SENTRY_DSN` is a common example. Not catastrophic if leaked, but it should not sit in version control, and the build needs to embed it into the binary or a config file shipped with the package.
+A typical case is a build-time identifier baked into the application, like Sentry's `SENTRY_DSN`: not catastrophic if leaked, but it should not sit in version control, and the build must embed it into the binary or a shipped config file.
 
 ## Where secrets are visible
 
@@ -31,7 +31,7 @@ echo "SENTRY_DSN={{ secrets.SENTRY_DSN }}" >> /etc/my-app/sentry.env
 
 Substitution happens at render time; the rendered spec / control file is written to disk in the build directory with the literal value embedded. That is fine for ephemeral CI runners, but **do not** template secrets into files that ship inside the package itself — anyone who downloads it can read them.
 
-**3. As `${...}` substitution targets in `config.yml`.** Strictly the same `${}` expansion any other env-sourced value uses; once a secret is referenced from `config.yml`, it is just a string in the parsed config. The `secrets:` block is what makes it cross into the container in step 1.
+**3. As `${...}` substitution targets in `config.yml`.** The same `${}` expansion any other env-sourced value uses; once referenced from `config.yml`, a secret is just a string in the parsed config. The `secrets:` block is what makes it cross into the container in step 1.
 
 ## Log redaction
 

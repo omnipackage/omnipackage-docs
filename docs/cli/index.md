@@ -57,6 +57,6 @@ Commands that touch the project (`build`, `publish`, `release`, `prime`, `info`)
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--container-output <stderr|stdout|null>` | `stderr` | Where the container's stdout/stderr is **printed to the terminal**. `null` means no terminal output. The default keeps container output on stderr so it doesn't intermingle with OmniPackage's own stdout logs |
+| `--container-output <stderr|stdout|null>` | `stderr` | Where the container's stdout/stderr is **printed to the terminal**. `null` means no terminal output. The default keeps container output on stderr so it doesn't mix with OmniPackage's own stdout logs |
 | `--disable-container-echo` | off (`set -x` enabled inside the container) | Quieter container output |
 | `--fail-log-lines <n>` | `50` | On failure with `--container-output=null`, print the last N lines of the on-disk log. Ignored otherwise (output already went to the terminal live) |

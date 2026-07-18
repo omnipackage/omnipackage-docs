@@ -8,7 +8,7 @@ OmniPackage ships an agent skill so AI coding assistants can scaffold, fill, and
 
 ## Claude Code
 
-Install the skill as a plugin — it triggers itself on packaging tasks and updates with the tool:
+Install the skill as a plugin. It triggers on packaging tasks and updates with the tool:
 
 ```
 /plugin marketplace add omnipackage/omnipackage-rs

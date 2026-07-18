@@ -4,7 +4,7 @@ description: "`omnipackage release` reference — build and publish RPM/DEB/pacm
 
 # `omnipackage release`
 
-Build and publish in one pass per distro. The most common command in CI — most users only run `release`, not the separate `build` / `publish` pair.
+Build and publish in one pass per distro. The most common command: most users only run `release`, not the separate `build` / `publish` pair.
 
 ```
 omnipackage release [project-dir] [flags]
@@ -12,7 +12,7 @@ omnipackage release [project-dir] [flags]
 
 `project-dir` defaults to `.`.
 
-`release` is not literally `build` followed by `publish`. For each distro it performs build + repo metadata generation + signing in a single container invocation, then uploads, then renders the install page. That is why `release` does not depend on a prior `--build-dir` (whereas `publish` does).
+`release` is not literally `build` followed by `publish`. For each distro it runs build, repo metadata generation, and signing in a single container, then uploads and renders the install page. This is why `release` does not depend on a prior `--build-dir`, while `publish` does.
 
 Previously published packages are pruned per the repository's [`retain_packages`](../configuration/repositories.md#package-retention) setting before the upload.
 
@@ -38,5 +38,5 @@ The union of `build` and `publish` flags. Every flag has a default; the table sh
 
 ## `release` vs. separate `build` + `publish`
 
-- **`release`** — the default. Everything happens in the same container per distro, so it is also faster than the two-step pair.
+- **`release`** — the default. Everything happens in one container per distro, so it is also faster than the two-step pair.
 - **`build` then `publish`** — useful for inspecting the artefact (install it locally, run a smoke test) before pushing to the repository, or for publishing the same artefact to multiple repositories without rebuilding.

@@ -58,6 +58,6 @@ omnipackage portal arch                  # pacman -Ss qt6   (base-devel is prein
 ```
 
 !!! note
-    Family names diverge in ways that surprise. openSUSE's Core5Compat package is `qt6-qt5compat-devel` (same as Fedora), **not** `qt6-core5compat-devel`.
+    Family names diverge in surprising ways. openSUSE's Core5Compat package is `qt6-qt5compat-devel` (same as Fedora), **not** `qt6-core5compat-devel`.
 
 The full per-family Qt6 list is in [Build recipes → Qt6 dependencies](build_recipes.md#qt6-dependencies).

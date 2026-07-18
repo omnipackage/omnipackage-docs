@@ -59,7 +59,7 @@ Open `install.html` in a browser for the per-distro install snippets, or run `in
 
 The directory is a complete, standard repository. To serve it over the network, point any static web server (nginx, Caddy, `python -m http.server`) at `path`, or place it on an NFS/SMB share. Package managers consume it like any other repo.
 
-The generated `install.html` links use the on-disk `path`, not your server's URL, so for a networked repo give consumers the repository URL directly. If you want a turnkey public repo with a matching install page, an S3-compatible backend is simpler — including self-hosted [MinIO](s3_repository.md), which speaks the same S3 API. See [Publishing to S3](s3_repository.md).
+The generated `install.html` links use the on-disk `path`, not your server's URL, so for a networked repo give consumers the repository URL directly. For a turnkey public repo with a matching install page, an [S3-compatible backend](s3_repository.md) is simpler — including self-hosted MinIO, which speaks the same S3 API.
 
 ## Retention
 

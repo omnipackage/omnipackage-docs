@@ -19,7 +19,7 @@ description: OmniPackage documentation — install, configure, and ship signed R
 
 # OmniPackage documentation
 
-Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM, DEB, and pacman packages to many Linux distributions from one YAML config. For the project overview and the "why", see [omnipackage.org](https://omnipackage.org/).
+Reference and guides for **OmniPackage**, a CLI for building and publishing signed RPM, DEB, and pacman packages to many Linux distributions from one YAML config. For the project overview, see [omnipackage.org](https://omnipackage.org/).
 
 ## Where to start
 
@@ -41,7 +41,7 @@ Full walkthrough: [Getting started](getting_started.md).
 
 ## Real-world projects
 
-- [`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — Qt desktop music player. 31 build targets, Qt5/Qt6 split via YAML anchors, per-distro CMake flags, R2 with Cloudflare cache purges.
+- [`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — Qt desktop music player. 36 build targets, Qt5/Qt6 split via YAML anchors, per-distro CMake flags, R2 with Cloudflare cache purges.
 - [`omnipackage/omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs) — OmniPackage built with itself. `before_build_script` installs a current Rust toolchain on older distros; newer ones use distro-packaged Rust. Dual GHCR caches cover org and contributor-fork workflows.
 - [`omnipackage/examples`](https://github.com/omnipackage/examples) — minimal one-per-language templates (C, C++, CMake, Rust, Go, Python, Ruby, Crystal, Electron, Tauri).
 

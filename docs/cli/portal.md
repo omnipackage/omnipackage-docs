@@ -4,7 +4,7 @@ description: "`omnipackage portal` reference — open an interactive shell insid
 
 # `omnipackage portal`
 
-Open an interactive `bash` shell inside the base container image for a given distro. The debugging tool when a build fails and you need to investigate — run the same `dnf install ...` / `apt-get install ...` / `pacman -Syu ...` lines `setup` would run, inspect the error, find the right package name, then update `config.yml`.
+Open an interactive `bash` shell inside the base container image for a given distro. Use it to debug failing builds: run the same `dnf install ...` / `apt-get install ...` / `pacman -Syu ...` lines `setup` would run, inspect the error, find the right package name, then update `config.yml`.
 
 ```
 omnipackage portal <distro> [flags]

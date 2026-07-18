@@ -28,7 +28,7 @@ flowchart TD
 
 ### Developer side
 
-1. **Scaffold** *(optional)* — `omnipackage init` detects the project type from marker files (`Cargo.toml`, `go.mod`, `CMakeLists.txt`, `pyproject.toml`, …) and renders a starter `.omnipackage/config.yml` plus per-format template files (RPM `.spec.liquid`, `debian/` directory, pacman `PKGBUILD.liquid`). Detection and the generated templates are best-effort starting points, not finished configs — expect to edit `config.yml`, the spec, and the `debian/` files to match what your project builds and ships. Skip this step entirely if you would rather hand-write the config from one of the [examples](../examples.md).
+1. **Scaffold** *(optional)* — `omnipackage init` detects the project type from marker files (`Cargo.toml`, `go.mod`, `CMakeLists.txt`, `pyproject.toml`, …) and renders a starter `.omnipackage/config.yml` plus per-format template files (RPM `.spec.liquid`, `debian/` directory, pacman `PKGBUILD.liquid`). The generated templates are starting points, not finished configs: expect to edit `config.yml`, the spec, and the `debian/` files to match what your project builds and ships. Skip this step if you would rather hand-write the config from one of the [examples](../examples.md).
 
 2. **Release** — `omnipackage release` reads the config and, for each configured distro:
     - Pulls the distro container image (`opensuse/leap:16.0`, `fedora:42`, `debian:trixie`, `archlinux:latest`, etc.).
@@ -39,9 +39,9 @@ flowchart TD
     - Uploads the signed packages and metadata to S3 (or any S3-compatible store: R2, GCS, B2, MinIO; see [`s3_repository`](s3_repository.md)).
     - Generates the install page (`install.html`) and, next to it, `install.sh` — a one-line installer that auto-detects the user's distro — and `install.json`, the same per-distro data in machine-readable form for automation.
 
-`omnipackage prime` sits orthogonally to this — it pre-runs the distro setup commands and snapshots the resulting container image to a registry, so subsequent releases skip the slow `apt-get install build-essential` phase. See [`image_caches`](../configuration/image_caches.md).
+`omnipackage prime` is separate from this flow: it pre-runs the distro setup commands and snapshots the container image to a registry, so later releases skip the slow `apt-get install build-essential` phase. See [`image_caches`](../configuration/image_caches.md).
 
-`omnipackage` runs anywhere a container runtime does (laptop, VPS, any CI). One common setup is free end-to-end: GitHub Actions covers the build on the free tier for public repositories, and S3-compatible storage is either cheap (AWS) or free under common limits — Cloudflare R2, Backblaze B2, and Google Cloud Storage all have free tiers generous enough for small-to-mid projects.
+`omnipackage` runs anywhere a container runtime does (laptop, VPS, any CI). A common setup is free end-to-end: GitHub Actions is free for public repositories, and Cloudflare R2, Backblaze B2, and Google Cloud Storage have free tiers that cover small-to-mid projects.
 
 ### User side
 
@@ -63,6 +63,6 @@ After install, users receive updates through their distro's normal `apt upgrade`
 
 ## What it does not do
 
-- Build other package formats. RPM, DEB, and pacman only. Flatpak/Snap/AppImage/Nix are different bets — see [About](https://omnipackage.org/about) for why. (OmniPackage builds pacman packages into its own signed repo; it does not publish to the AUR.)
+- Build other package formats. RPM, DEB, and pacman only. Flatpak/Snap/AppImage/Nix are a different approach — see [About](https://omnipackage.org/about) for why. (OmniPackage builds pacman packages into its own signed repo; it does not publish to the AUR.)
 - Host your repository. You bring the bucket. The trade-off: no vendor lock-in, and your packages live in storage you control.
 - Sandbox installed software. Packages run with the same privileges any `apt install` package gets — no Flatpak-style isolation unless you ship it as part of your package (an AppArmor / SELinux profile, a `bwrap` / `firejail` wrapper around your binary).

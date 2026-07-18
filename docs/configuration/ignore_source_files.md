@@ -24,7 +24,7 @@ For each build, OmniPackage uses `rsync` to copy the project source into a worki
 Two main uses:
 
 - **Keep build artefacts out of the package source.** Prior local builds (`/build`, `/dist`, `/target`, `node_modules`) bloat the staged tree and can confuse the in-container build by colliding with what it is about to produce.
-- **Keep secrets out as hygiene.** `.env` typically holds the GPG key, S3 credentials, and other `${...}` sources. The final `.rpm` / `.deb` / `.pkg.tar.zst` only contains files explicitly installed by your spec / `debian/` / `PKGBUILD` recipes, so a stray `.env` in the staged tree will not ship to end users on its own — but it sits in the build container's working tree, available to anything the build script runs. That is a hazard if a script bakes it into a generated config or copies the source tree elsewhere. The init templates exclude `.env` for this reason; do the same when writing a config from scratch.
+- **Keep secrets out.** `.env` typically holds the GPG key and S3 credentials. The final package only contains files your spec / `debian/` / `PKGBUILD` recipes install, so a stray `.env` will not ship on its own — but it sits in the container's working tree, available to anything the build script runs. That is a hazard if a script bakes it into a generated config or copies the tree elsewhere. The init templates exclude `.env`; do the same in a config written from scratch.
 
 ## Pattern syntax
 
@@ -37,7 +37,7 @@ Patterns are rsync exclude filters (not gitignore — close, but not identical):
 | `*.ext` | Any file with that extension, at any depth (basename glob) |
 | `dir/*.tmp` | `*.tmp` files directly inside any `dir/` |
 
-`*` does not cross `/` boundaries (standard rsync). Stick to the four shapes above; more elaborate patterns (`**`, character classes) are valid in rsync but inconsistent across versions, so best avoided for portability.
+`*` does not cross `/` boundaries (standard rsync). Stick to the four shapes above; fancier patterns (`**`, character classes) are valid in rsync but inconsistent across versions, so avoid them.
 
 ## Defaults from `omnipackage init`
 

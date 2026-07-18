@@ -38,6 +38,6 @@ The authoritative source is [`distros.yml`](https://github.com/omnipackage/omnip
 
 ## Architecture
 
-OmniPackage does not pass `--platform` to the container runtime, so builds run on the host's native architecture. Most supported base images are multiarch (Arch Linux is the exception — x86_64 only upstream; Manjaro ships both images, but its ARM repositories are no longer updated), so an ARM64 host produces ARM64 binaries without extra configuration.
+OmniPackage does not pass `--platform` to the container runtime, so builds run on the host's native architecture: an ARM64 host produces ARM64 binaries with no extra configuration. Most base images are multiarch. Exceptions: Arch Linux is x86_64-only upstream, and Manjaro's ARM repositories are no longer updated.
 
-Repositories are per-architecture. Publishing for both `aarch64` and `x86_64` requires two independent sets of repos — each built on a host of the matching architecture, uploaded to its own bucket or path, and served through its own install page.
+Repositories are per-architecture. To publish both `aarch64` and `x86_64`, build two separate sets of repos: each on a host of the matching architecture, with its own bucket or path and its own install page.

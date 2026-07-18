@@ -4,7 +4,7 @@ description: "`image_caches` reference — pre-built container images that skip 
 
 # `image_caches`
 
-Each build target pulls a container image. Image caches let you push prepared images (the distro base plus everything `setup` installs) to a registry — or store them locally — so subsequent builds start from the snapshot and skip `setup` entirely.
+Each build target pulls a container image. Image caches store prepared images (the distro base plus everything `setup` installs) in a registry or locally, so later builds start from the snapshot and skip `setup` entirely.
 
 The cache is populated by [`prime`](../cli/prime.md) and consumed by `build` / `publish` / `release` via `--image-cache <name>`. If the named cache is configured but not yet primed, the container runtime fails to pull it — run `prime` first.
 
@@ -41,7 +41,7 @@ image_caches:
 
 ## GitHub Container Registry (ghcr.io)
 
-GHCR is the most common CI target — free and tightly integrated with GitHub Actions — and also the most common source of credential confusion. Two cases:
+GHCR is the most common CI target (free, integrated with GitHub Actions) and the most common source of credential confusion. Two cases:
 
 ### From GitHub Actions: `GITHUB_TOKEN`
 
@@ -84,7 +84,7 @@ GHCR images are owned by either a GitHub user or an organization. `namespace` is
 - Personal repo or personal-account `prime`: `namespace` is your GitHub username ({% raw %}`${{ github.repository_owner }}`{% endraw %} resolves to this in personal-repo workflows).
 - Org-owned repo: `namespace` is the org name. The token (`GITHUB_TOKEN` or PAT) needs `packages: write` on the org's packages.
 
-For projects primed from both org-owned CI and contributor forks, declare two `image_caches:` entries — one per namespace — and select with `--image-cache <name>` at run time. [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml) does exactly this with `github` and `github_personal` entries.
+For projects primed from both org-owned CI and contributor forks, declare two `image_caches:` entries, one per namespace, and select with `--image-cache <name>` at run time. [`omnipackage-rs/.omnipackage/config.yml`](https://github.com/omnipackage/omnipackage-rs/blob/master/.omnipackage/config.yml) does this with `github` and `github_personal` entries.
 
 ## Real-world references
 

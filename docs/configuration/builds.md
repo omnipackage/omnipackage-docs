@@ -23,15 +23,15 @@ Each entry in `builds:` defines one package build for one target distro. A proje
 | `pacman.pkgbuild_template` | pacman only | Path (relative to source dir) to a `PKGBUILD.liquid` file. Required for pacman-format distros (Arch, Manjaro) |
 | *(custom fields)* | no | Arbitrary scalar values (string, bool, int, float — not arrays or objects) passed straight into the template context. See [Templates](../guides/templates.md#custom-per-distro-variables) |
 
-`rpm:`, `deb:`, and `pacman:` blocks are not a per-build override of a default — only the block matching the distro's package format is consulted, so each build entry needs the one for its format. They are usually defined once via a YAML anchor (see below) rather than repeated.
+Only the `rpm:`, `deb:`, or `pacman:` block matching the distro's package format is read, so each build entry needs the one for its format. They are usually defined once via a YAML anchor (see below) rather than repeated.
 
 Unknown top-level keys in `config.yml` are silently ignored, which is what lets the anchor pattern below work cleanly.
 
 ### When `runtime_dependencies` is needed
 
-Rarely, for most projects. `rpmbuild` and `dpkg-shlibdeps` scan the built binaries' linked libraries during the package build and add the providing distro packages as dependencies automatically — the resulting package already declares everything it dynamically links against.
+Rarely. `rpmbuild` and `dpkg-shlibdeps` scan the built binaries' linked libraries during the package build and add the providing distro packages as dependencies automatically, so the package already declares everything it dynamically links against.
 
-Cases where explicit entries do matter:
+Explicit entries matter for:
 
 - **`dlopen`-loaded libraries** — not present in `DT_NEEDED`, so the build-time scanner cannot see them. Anything loaded by name at runtime (plugins, optional codecs, GPU backends) must be listed.
 - **Non-library runtime requirements** — external tools the package shells out to (`gpg`, `ffmpeg`, `podman`), data-only packages, fonts, themes.
@@ -119,7 +119,7 @@ For a multi-format project at scale (Qt5 vs. Qt6 splits, per-distro CMake flags)
 
 ## Custom fields
 
-Any field on a build entry beyond the keys above lands in the [template context](../guides/templates.md#custom-per-distro-variables) under the same name. This is the mechanism for per-distro variation that doesn't fit into `build_dependencies` or `runtime_dependencies` — CMake flags, environment exports, feature toggles. Values must be scalars (strings, bools, ints, floats); arrays and nested objects are not supported.
+Any field on a build entry beyond the keys above lands in the [template context](../guides/templates.md#custom-per-distro-variables) under the same name. Use it for per-distro variation that doesn't fit `build_dependencies` or `runtime_dependencies`: CMake flags, environment exports, feature toggles. Values must be scalars (strings, bools, ints, floats); arrays and nested objects are not supported.
 
 ```yaml
 - distro: "ubuntu_20.04"

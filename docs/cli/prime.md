@@ -41,6 +41,6 @@ Re-prime when any input to `setup` changes, since the cached image will no longe
 - The distro's published base image receives security updates (the typical reason for the monthly cron in the [CI/CD guide](../guides/cicd.md#image-cache-priming)).
 - `build_dependencies` change in `config.yml`.
 - A `before_build_script` changes.
-- The toolchain installed by `setup` moves (e.g. a newer Rust via `install_rust.sh`).
+- The toolchain installed by `setup` changes (e.g. a newer Rust via `install_rust.sh`).
 
 The first usually runs through the scheduled cron; the rest are triggered manually via `workflow_dispatch` after the relevant change lands.

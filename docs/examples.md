@@ -14,7 +14,7 @@ Larger configs that exercise more of OmniPackage — many distros, per-distro ov
 
 [`olegantonyan/mpz`](https://github.com/olegantonyan/mpz) — a Qt desktop music player (C++/CMake). The [`.omnipackage/config.yml`](https://github.com/olegantonyan/mpz/blob/master/.omnipackage/config.yml) demonstrates:
 
-- **35 build targets** across openSUSE, Debian, Ubuntu, Fedora, AlmaLinux, RockyLinux, Mageia, Arch, and Manjaro.
+- **36 build targets** across openSUSE, Debian, Ubuntu, Fedora, AlmaLinux, RockyLinux, Mageia, Arch, and Manjaro.
 - **Per-distro Qt version split** via YAML anchors (`*debian_qt5` / `*debian_qt6`, `*readhat_qt5` / `*readhat_qt6`). Each anchor sets the right `build_dependencies` and, for Qt5, passes `CMAKE_EXTRA_CLI: "-DUSE_QT5=ON"`.
 - **`runtime_dependencies`** for Qt5 multimedia plugins on Debian-family distros.
 - **Two `version_extractors`**: a shell extractor producing `2.99~next.<timestamp>.<sha>` for the rolling channel, and a `file` extractor that pulls the stable version from `CMakeLists.txt` via regex.
@@ -31,6 +31,6 @@ Larger configs that exercise more of OmniPackage — many distros, per-distro ov
 - **Per-distro `ENV_EXPORTS`** — Ubuntu 20.04 needs `export CC=gcc-10` because the default compiler is too old for some dependencies.
 - **Two `image_caches`** pointing at the same GHCR registry under different namespaces (org vs. personal) — for builds from forks or contributor accounts.
 - **`cargotoml` version extractor** reads the version directly from `Cargo.toml`.
-- Matching **GitHub Actions workflows** in [`.github/workflows`](https://github.com/omnipackage/omnipackage-rs/tree/master/.github/workflows). The shape mirrors mpz; the difference — an extra `bootstrap-binary` job that builds the binary from source — is specific to OmniPackage building itself.
+- Matching **GitHub Actions workflows** in [`.github/workflows`](https://github.com/omnipackage/omnipackage-rs/tree/master/.github/workflows). The shape mirrors mpz, plus a `bootstrap-binary` job that builds the binary from source, since OmniPackage builds itself.
 
 Either project is a reasonable starting point: copy mpz for many-distro setups with YAML anchors, copy omnipackage-rs for bootstrapping a toolchain inside the build container.

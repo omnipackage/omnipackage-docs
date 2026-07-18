@@ -8,7 +8,7 @@ Running `omnipackage release` from CI so every push, tag, or other trigger produ
 
 ## GitHub Actions
 
-A suggested setup, adapted from [`mpz`](https://github.com/olegantonyan/mpz). Other projects can wire triggers, secrets, and job topology differently; the shape below is a reasonable starting point. The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
+A suggested setup, adapted from [`mpz`](https://github.com/olegantonyan/mpz). The reference workflows in [`mpz/.github/workflows`](https://github.com/olegantonyan/mpz/tree/master/.github/workflows) are four files:
 
 | File | Trigger | Purpose |
 |------|---------|---------|
@@ -19,7 +19,7 @@ A suggested setup, adapted from [`mpz`](https://github.com/olegantonyan/mpz). Ot
 
 When-to-release lives in the trigger wrappers; how-to-release lives in the shared workflow. The two channels differ only in which `repositories:` entry they publish to and which `version_extractor` they use.
 
-The split is optional — a sensible default (dev packages on every push to `master`, stable packages on each tagged release), but a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you do not need and call the pipeline directly.
+The split (dev packages on every push to `master`, stable packages on each tagged release) is optional: a single workflow publishing to a single `repositories:` entry works just as well. Drop the wrapper you do not need.
 
 ### Installing the CLI
 
@@ -178,7 +178,7 @@ jobs:
 
 - `permissions: packages: write` lets `GITHUB_TOKEN` push images to GHCR (the default is read-only).
 - `cron: '44 6 1 * *'` runs 06:44 UTC on the 1st of each month — off-the-hour minutes avoid scheduler throttling.
-- Re-prime when distro base images receive security updates, the `setup` script changes, or the toolchain in `setup` moves. The monthly cron catches the first; trigger manually for the others.
+- Re-prime when distro base images receive security updates, the `setup` script changes, or the toolchain in `setup` changes. The monthly cron catches the first; trigger manually for the others.
 
 The matching `image_caches:` entry:
 

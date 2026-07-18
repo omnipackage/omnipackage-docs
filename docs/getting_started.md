@@ -20,7 +20,7 @@ Verify:
 omnipackage --version
 ```
 
-Expected output: `omnipackage <version>` confirming the binary is on `$PATH`.
+Prints `omnipackage <version>` if the binary is on `$PATH`.
 
 ## Build the example project
 
@@ -48,13 +48,13 @@ omnipackage release .
 
 The build log streams for each distro in `.omnipackage/config.yml`.
 
-The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `~/omnipackage-examples-repos/c_makefile/install.html` in a browser — a generated landing page with copy-paste instructions for each distro. The same directory also holds `install.sh` — run it to detect this machine's distro and install in one step — and `install.json`, the same data machine-readable for automation. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
+The command writes local repositories to `~/omnipackage-examples-repos/c_makefile`. Open `install.html` there in a browser for copy-paste install instructions per distro. The directory also holds `install.sh`, which detects the machine's distro and installs in one step, and `install.json` with the same data for automation. The path comes from the `repositories` block in `.omnipackage/config.yml`; the first entry is used by default.
 
 ## Next steps
 
 ### Switch to S3 for production
 
-Local repositories suit testing; production usually means S3. The example config already includes an S3 block. Select it by name:
+Local repositories are for testing; production usually means S3. The example config already includes an S3 block. Select it by name:
 
 ```
 omnipackage release . --repository "Example bucket"
@@ -62,4 +62,4 @@ omnipackage release . --repository "Example bucket"
 
 ### How secrets flow
 
-Secrets are declared in `config.yml` and passed from the environment via `${...}`. `config.yml` is the single source of truth; `.env` (or any other env file, or the process environment) holds the values. No hidden env settings exist beyond what `config.yml` declares.
+Secrets are declared in `config.yml` and passed from the environment via `${...}`. `config.yml` declares what is needed; `.env` (or any env file, or the process environment) holds the values. There are no hidden env settings.

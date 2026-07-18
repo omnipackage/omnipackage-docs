@@ -4,7 +4,7 @@ description: Liquid templates for the RPM `.spec` file, DEB `debian/` control fi
 
 # Templates
 
-OmniPackage renders the RPM `.spec` file, the DEB `debian/` control files, and the pacman `PKGBUILD` from [Liquid](https://shopify.github.io/liquid/) templates. This page covers what's available in the template context and how to thread per-distro values into a single shared template.
+OmniPackage renders the RPM `.spec` file, the DEB `debian/` control files, and the pacman `PKGBUILD` from [Liquid](https://shopify.github.io/liquid/) templates. This page covers the template context and how to feed per-distro values into one shared template.
 
 ## Why template
 

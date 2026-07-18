@@ -6,7 +6,7 @@ description: Turn an S3-compatible bucket (Cloudflare R2, AWS S3, MinIO) into a 
 
 End-to-end walkthrough for turning an S3 bucket (or any S3-compatible storage) into a public DEB/RPM/pacman repository.
 
-If you do not already have a preference, **Cloudflare R2 is recommended** — it is the most-tested provider in this project, charges nothing for egress (so serving packages is free), and includes 10 GB of free storage.
+**Cloudflare R2 is recommended** if you have no preference: it is the most-tested provider here, egress is free (so serving packages costs nothing), and it includes 10 GB of free storage.
 
 ## AWS S3
 

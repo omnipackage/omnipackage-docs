@@ -10,7 +10,7 @@ Conventions that make OmniPackage-built packages behave well on the distros they
 
 The user-facing contract: **a user adds your OmniPackage repository and nothing else, and `apt install <your-package>` / `dnf install <your-package>` resolves cleanly, every runtime dependency satisfied from the repositories the distro ships with.** No extra PPAs, no Copr, no third-party repos, no manual `.deb` downloads for a transitive dependency.
 
-That contract is what keeps the generated `install.html` a four-line snippet instead of a small howto. Everything else on this page follows from holding that line.
+That contract is what keeps the generated `install.html` a four-line snippet instead of a small howto. Everything else on this page follows from it.
 
 ## One project per repository
 
@@ -21,9 +21,9 @@ Host a single project per OmniPackage repository. The generated install flow ass
 - **Non-overlapping audiences.** Users who add your repo see package names they do not recognise. Every `apt search` hit becomes "what is this, and why is it on my system?" — the trust signal of a focused repo is gone.
 - **Overlapping audiences.** Users installing more than one of your projects hit a duplicate-source warning unless the install page for project B detects that project A's repo is already configured and skips the add step. Doing that portably across `apt` / `dnf` / `zypper` / `pacman` is extra shell logic the install snippet does not currently carry.
 
-The install page is one-project-shaped as well — it names a single package in the final command, and supporting "add this repo, then pick from the list" is workable but not currently implemented. This may change in a future release; until then, keep one project per repository. The bucket itself can be shared — use a distinct [`path_in_bucket`](../configuration/repositories.md) per project to isolate each repo tree. Separate buckets work too but are not required.
+"Add this repo, then pick from the list" may come in a future release; until then, keep one project per repository. The bucket itself can be shared: use a distinct [`path_in_bucket`](../configuration/repositories.md) per project to isolate each repo tree. Separate buckets work too but are not required.
 
-The occasional objection is user-side: some users prefer to avoid multiple third-party repos on their system. Reasonable, but users who object on those grounds typically would not accept *one* third-party repo either — the trust decision is per-source, not per-package, and the system-side cost of three small focused repos is not meaningfully different from one large one.
+Some users prefer to avoid multiple third-party repos on their system. But the trust decision is per-source, not per-package, and the system-side cost of three small focused repos is about the same as one large one.
 
 ## Runtime dependencies must come from the distro's standard repos
 
@@ -70,6 +70,6 @@ So: use `before_build_script` freely for a modern toolchain. Do not use it to pa
 
 A question worth answering up-front when shipping a third-party repository: "why should a user trust me as the package provider?"
 
-The honest answer is that the trust decision is not about the distribution channel. Users trust *you* — the developer — or they do not. If they trust you, they will `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your repo. If they do not, none of those work either — the channel does not supply trust that was not already there.
+The trust decision is not about the distribution channel. Users trust *you*, the developer, or they do not. If they trust you, they will `cargo install`, `npm install`, `pip install`, run your `curl | sh`, or add your repo. If they do not, none of those work either.
 
-OmniPackage does not move the needle in either direction. It is open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only provides shims that drive the standard Linux packaging tools — `rpmbuild`, `debuild`, `makepkg`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` / `.pkg.tar.zst` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.
+OmniPackage changes nothing here. It is open source ([`omnipackage-rs`](https://github.com/omnipackage/omnipackage-rs)) and only drives the standard Linux packaging tools: `rpmbuild`, `debuild`, `makepkg`, `gpg`, `createrepo_c`. What ends up inside the `.deb` / `.rpm` / `.pkg.tar.zst` is your code, your build script, your dependencies; the signing key is yours, the bucket is yours, the install page is generated from your config.
